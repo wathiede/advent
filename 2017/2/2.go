@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func checksum(spreadsheet string) int {
+func checksum1(spreadsheet string) int {
 	sum := 0
 	for _, row := range strings.Split(spreadsheet, "\n") {
 		min := math.MaxInt64
@@ -29,6 +29,38 @@ func checksum(spreadsheet string) int {
 	return sum
 }
 
+func checksum2(spreadsheet string) int {
+	sum := 0
+	for _, row := range strings.Split(spreadsheet, "\n") {
+		var cols []int
+		for _, col := range strings.Fields(row) {
+			v, err := strconv.Atoi(col)
+			if err != nil {
+				panic(fmt.Sprintf("Failed to parse %q", col))
+			}
+			cols = append(cols, v)
+		}
+		for i, a1 := range cols[:len(cols)-1] {
+			for _, a2 := range cols[i+1:] {
+				var n, d int
+				if a2 > a1 {
+					n = a2
+					d = a1
+				} else {
+					n = a1
+					d = a2
+				}
+				v := n / d
+				r := n - v*d
+				if r == 0 {
+					sum += v
+				}
+			}
+		}
+	}
+	return sum
+}
+
 func main() {
 	spreadsheet := `414	382	1515	319	83	1327	116	391	101	749	1388	1046	1427	105	1341	1590
 	960	930	192	147	932	621	1139	198	865	820	597	165	232	417	19	183
@@ -46,5 +78,6 @@ func main() {
 	334	275	395	128	347	118	353	281	430	156	312	386	160	194	63	141
 	146	1116	153	815	2212	2070	599	3018	2640	47	125	2292	165	2348	2694	184
 	1704	2194	1753	146	2063	1668	1280	615	163	190	2269	1856	150	158	2250	2459`
-	fmt.Println(checksum(spreadsheet))
+	fmt.Println(checksum1(spreadsheet))
+	fmt.Println(checksum2(spreadsheet))
 }
