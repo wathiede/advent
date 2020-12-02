@@ -69,8 +69,8 @@ fn find_pair_2020(nums: &Vec<u32>) -> Option<(u32, u32)> {
 /// Finds triple of numbers in `nums` that sum to 2020.  If no triple is found, `None` is returned.
 fn find_triple_2020(nums: &Vec<u32>) -> Option<(u32, u32, u32)> {
     for (idx1, first) in nums.iter().enumerate() {
-        for second in nums.iter().skip(idx1 + 1) {
-            for third in nums.iter() {
+        for (idx2, second) in nums.iter().enumerate().skip(idx1 + 1) {
+            for third in nums.iter().skip(idx2 + 1) {
                 if first + second + third == 2020 {
                     return Some((*first, *second, *third));
                 }
