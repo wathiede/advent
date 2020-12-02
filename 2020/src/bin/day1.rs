@@ -62,7 +62,7 @@ fn find_pair_2020(nums: &Vec<u32>) -> Option<(u32, u32)> {
 /// Finds triple of numbers in `nums` that sum to 2020.  If no triple is found, `None` is returned.
 fn find_triple_2020(nums: &Vec<u32>) -> Option<(u32, u32, u32)> {
     for (idx1, first) in nums.iter().enumerate() {
-        for (idx2, second) in nums.iter().enumerate().skip(idx1 + 1) {
+        for second in nums.iter().skip(idx1 + 1) {
             for third in nums.iter() {
                 if first + second + third == 2020 {
                     return Some((*first, *second, *third));
@@ -88,23 +88,32 @@ fn parse<P: AsRef<Path>>(path: P) -> Result<Vec<u32>> {
 
 #[cfg(test)]
 mod tests {
+    use anyhow::Context;
+
     use super::*;
 
+    fn get_nums() -> Vec<u32> {
+        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let path = root.join("src/bin/day1-test.txt");
+        parse(&path)
+            .with_context(|| format!("Input {}", path.display()))
+            .expect("failed to parse")
+    }
     #[test]
     fn test_parse() {
-        let nums = parse("src/bin/1-test.txt").expect("failed to parse");
+        let nums = get_nums();
         assert_eq!(nums, vec![1721, 979, 366, 299, 675, 1456]);
     }
 
     #[test]
     fn test_find_pair_2020() {
-        let nums = parse("src/bin/1-test.txt").expect("failed to parse");
+        let nums = get_nums();
         assert_eq!(find_pair_2020(&nums), Some((1721, 299)));
     }
 
     #[test]
     fn test_find_triple_2020() {
-        let nums = parse("src/bin/1-test.txt").expect("failed to parse");
+        let nums = get_nums();
         assert_eq!(find_triple_2020(&nums), Some((979, 366, 675)));
     }
 }
