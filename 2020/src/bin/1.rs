@@ -34,17 +34,39 @@ fn main() -> Result<()> {
         .nth(1)
         .ok_or(anyhow!("Usage: 1 <path to expense report>"))?;
     let nums = parse(path)?;
-    let pair = find_2020(nums).ok_or(anyhow!("Couldn't find pairs summing to 2020"))?;
+    let pair = find_pair_2020(&nums).ok_or(anyhow!("Couldn't find pairs summing to 2020"))?;
     println!("Product of {} x {} = {}", pair.0, pair.1, pair.0 * pair.1);
+    let triple = find_triple_2020(&nums).ok_or(anyhow!("Couldn't find triples summing to 2020"))?;
+    println!(
+        "Product of {} x {} x {} = {}",
+        triple.0,
+        triple.1,
+        triple.2,
+        triple.0 * triple.1 * triple.2
+    );
     Ok(())
 }
 
 /// Finds pairs of numbers in `nums` that sum to 2020.  If no pairs are found, `None` is returned.
-fn find_2020(nums: Vec<u32>) -> Option<(u32, u32)> {
+fn find_pair_2020(nums: &Vec<u32>) -> Option<(u32, u32)> {
     for (idx, first) in nums.iter().enumerate() {
         for second in nums.iter().skip(idx + 1) {
             if first + second == 2020 {
                 return Some((*first, *second));
+            }
+        }
+    }
+    None
+}
+
+/// Finds triple of numbers in `nums` that sum to 2020.  If no triple is found, `None` is returned.
+fn find_triple_2020(nums: &Vec<u32>) -> Option<(u32, u32, u32)> {
+    for (idx1, first) in nums.iter().enumerate() {
+        for (idx2, second) in nums.iter().enumerate().skip(idx1 + 1) {
+            for third in nums.iter() {
+                if first + second + third == 2020 {
+                    return Some((*first, *second, *third));
+                }
             }
         }
     }
@@ -75,8 +97,14 @@ mod tests {
     }
 
     #[test]
-    fn test_find_2020() {
+    fn test_find_pair_2020() {
         let nums = parse("src/bin/1-test.txt").expect("failed to parse");
-        assert_eq!(find_2020(nums), Some((1721, 299)));
+        assert_eq!(find_pair_2020(&nums), Some((1721, 299)));
+    }
+
+    #[test]
+    fn test_find_triple_2020() {
+        let nums = parse("src/bin/1-test.txt").expect("failed to parse");
+        assert_eq!(find_triple_2020(&nums), Some((979, 366, 675)));
     }
 }
