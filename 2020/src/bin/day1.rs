@@ -99,6 +99,7 @@ mod tests {
             .with_context(|| format!("Input {}", path.display()))
             .expect("failed to parse")
     }
+
     #[test]
     fn test_parse() {
         let nums = get_nums();
