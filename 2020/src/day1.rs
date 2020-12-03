@@ -30,98 +30,45 @@
 //!
 //! In your expense report, what is the product of the three entries that sum to 2020?
 
-use std::fs::File;
-use std::io::{BufRead, BufReader};
-use std::path::Path;
+use aoc_runner_derive::{aoc, aoc_generator};
 
-use anyhow::{anyhow, Result};
-
-fn main() -> Result<()> {
-    let path = std::env::args()
-        .nth(1)
-        .ok_or(anyhow!("Usage: 1 <path to expense report>"))?;
-    let nums = parse(path)?;
-    let pair = find_pair_2020(&nums).ok_or(anyhow!("Couldn't find pairs summing to 2020"))?;
-    println!("Product of {} x {} = {}", pair.0, pair.1, pair.0 * pair.1);
-    let triple = find_triple_2020(&nums).ok_or(anyhow!("Couldn't find triples summing to 2020"))?;
-    println!(
-        "Product of {} x {} x {} = {}",
-        triple.0,
-        triple.1,
-        triple.2,
-        triple.0 * triple.1 * triple.2
-    );
-    Ok(())
+/// Reads text file containing one integer per line, and parses them into `Vec<u32>`.  Any
+/// non-number will result in a panice.
+#[aoc_generator(day1)]
+fn parse(input: &str) -> Vec<u32> {
+    input
+        .split('\n')
+        .map(|line| line.parse().unwrap())
+        .collect()
 }
 
-/// Finds pairs of numbers in `nums` that sum to 2020.  If no pairs are found, `None` is returned.
-fn find_pair_2020(nums: &Vec<u32>) -> Option<(u32, u32)> {
+/// Finds pairs of numbers in `nums` that sum to 2020.  If no pairs are found, the function panics.
+/// TODO(wathiede): make a version that sorts or uses a hash for finding the match to compare
+/// benchmarks.
+#[aoc(day1, part1)]
+fn find_pair_2020(nums: &[u32]) -> u32 {
     for (idx, first) in nums.iter().enumerate() {
         for second in nums.iter().skip(idx + 1) {
             if first + second == 2020 {
-                return Some((*first, *second));
+                return first * second;
             }
         }
     }
-    None
+    panic!("Couldn't find pair");
 }
 
-/// Finds triple of numbers in `nums` that sum to 2020.  If no triple is found, `None` is returned.
-fn find_triple_2020(nums: &Vec<u32>) -> Option<(u32, u32, u32)> {
+/// Finds triple of numbers in `nums` that sum to 2020.  If no triple is found, the function
+/// panics.
+#[aoc(day1, part2)]
+fn find_triple_2020(nums: &[u32]) -> u32 {
     for (idx1, first) in nums.iter().enumerate() {
         for (idx2, second) in nums.iter().enumerate().skip(idx1 + 1) {
             for third in nums.iter().skip(idx2 + 1) {
                 if first + second + third == 2020 {
-                    return Some((*first, *second, *third));
+                    return first * second * third;
                 }
             }
         }
     }
-    None
-}
-
-/// Reads text file containing one integer per line, and parses them into `Vec<u32>`.  Any
-/// non-number will result in an error returned.
-fn parse<P: AsRef<Path>>(path: P) -> Result<Vec<u32>> {
-    let f = File::open(path)?;
-    let f = BufReader::new(f);
-    let mut nums = Vec::new();
-    for line in f.lines() {
-        let num: u32 = line?.parse()?;
-        nums.push(num)
-    }
-    Ok(nums)
-}
-
-#[cfg(test)]
-mod tests {
-    use anyhow::Context;
-
-    use super::*;
-
-    fn get_nums() -> Vec<u32> {
-        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let path = root.join("src/bin/day1-test.txt");
-        parse(&path)
-            .with_context(|| format!("Input {}", path.display()))
-            .expect("failed to parse")
-    }
-
-    #[test]
-    fn test_parse() {
-        let nums = get_nums();
-        assert_eq!(nums, vec![1721, 979, 366, 299, 675, 1456]);
-    }
-
-    #[test]
-    fn test_find_pair_2020() {
-        let nums = get_nums();
-        assert_eq!(find_pair_2020(&nums), Some((1721, 299)));
-    }
-
-    #[test]
-    fn test_find_triple_2020() {
-        let nums = get_nums();
-        assert_eq!(find_triple_2020(&nums), Some((979, 366, 675)));
-    }
+    panic!("Couldn't find triple");
 }
