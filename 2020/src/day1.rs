@@ -30,6 +30,8 @@
 //!
 //! In your expense report, what is the product of the three entries that sum to 2020?
 
+use std::collections::HashSet;
+
 use aoc_runner_derive::{aoc, aoc_generator};
 
 /// Reads text file containing one integer per line, and parses them into `Vec<u32>`.  Any
@@ -43,15 +45,53 @@ fn parse(input: &str) -> Vec<u32> {
 }
 
 /// Finds pairs of numbers in `nums` that sum to 2020.  If no pairs are found, the function panics.
-/// TODO(wathiede): make a version that sorts or uses a hash for finding the match to compare
-/// benchmarks.
-#[aoc(day1, part1)]
-fn find_pair_2020(nums: &[u32]) -> u32 {
+#[aoc(day1, part1, linear)]
+fn find_pair_2020_linear(nums: &[u32]) -> u32 {
     for (idx, first) in nums.iter().enumerate() {
         for second in nums.iter().skip(idx + 1) {
             if first + second == 2020 {
                 return first * second;
             }
+        }
+    }
+    panic!("Couldn't find pair");
+}
+
+#[aoc_generator(day1, part1, binary)]
+fn parse_sorted(input: &str) -> Vec<u32> {
+    let mut nums: Vec<u32> = input
+        .split('\n')
+        .map(|line| line.parse().unwrap())
+        .collect();
+    nums.sort();
+    nums
+}
+
+#[aoc(day1, part1, binary)]
+fn find_pair_2020_binary(nums: &[u32]) -> u32 {
+    for first in nums.iter() {
+        let diff = 2020 - first;
+        if nums.binary_search(&diff).is_ok() {
+            return first * diff;
+        }
+    }
+    panic!("Couldn't find pair");
+}
+
+#[aoc_generator(day1, part1, set)]
+fn parse_set(input: &str) -> HashSet<u32> {
+    input
+        .split('\n')
+        .map(|line| line.parse().unwrap())
+        .collect()
+}
+
+#[aoc(day1, part1, set)]
+fn find_pair_2020_set(nums: &HashSet<u32>) -> u32 {
+    for first in nums.iter() {
+        let diff = 2020 - first;
+        if nums.contains(&diff) {
+            return first * diff;
         }
     }
     panic!("Couldn't find pair");
