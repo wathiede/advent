@@ -24,10 +24,14 @@ Day 1 - Part 2 : 165026160
 ```
 AOC 2020
 Day 2 - Part 1 : 640
-        generator: 1.821498ms,
-        runner: 115.525µs
+        generator: 1.732103ms,
+        runner: 100.802µs
+
+Day 2 - Part 1 - handrolled : 640
+        generator: 157.527µs,
+        runner: 97.775µs
 
 Day 2 - Part 2 : 472
-        generator: 1.52241ms,
-        runner: 10.459µs
+        generator: 1.374162ms,
+        runner: 10.461µs
 ```

@@ -44,7 +44,7 @@ struct Policy {
 }
 
 #[aoc_generator(day2)]
-fn parse(input: &str) -> Vec<Policy> {
+fn parse_regex(input: &str) -> Vec<Policy> {
     let re = Regex::new(r"(\d+)-(\d+) (\w): (.*)").expect("Failed to compile regex");
     input
         .split('\n')
@@ -61,6 +61,38 @@ fn parse(input: &str) -> Vec<Policy> {
         .collect()
 }
 
+#[aoc_generator(day2, part1, handrolled)]
+fn parse_handrolled(input: &str) -> Vec<Policy> {
+    // Example line:
+    //   1-3 a: abcde
+    input
+        .split('\n')
+        .filter_map(|line| {
+            let start = 0;
+            let end = line.find('-')?;
+            let min: usize = line[start..end].parse().ok()?;
+
+            let start = end + 1;
+            let end = line.find(' ')?;
+            let max: usize = line[start..end].parse().ok()?;
+
+            let start = end + 1;
+            let end = line.find(':')?;
+            let letter = line[start..end].to_string();
+
+            let start = end + 2;
+            let password = line[start..].to_string();
+
+            Some(Policy {
+                min,
+                max,
+                letter,
+                password,
+            })
+        })
+        .collect()
+}
+
 fn is_valid_policy_part1(p: &Policy) -> bool {
     let c = p.password.matches(&p.letter).count();
     p.min <= c && c <= p.max
@@ -68,6 +100,11 @@ fn is_valid_policy_part1(p: &Policy) -> bool {
 
 #[aoc(day2, part1)]
 fn valid_policy_count_part1(policies: &[Policy]) -> usize {
+    policies.iter().filter(|p| is_valid_policy_part1(p)).count()
+}
+
+#[aoc(day2, part1, handrolled)]
+fn valid_policy_count_handrolled_part1(policies: &[Policy]) -> usize {
     policies.iter().filter(|p| is_valid_policy_part1(p)).count()
 }
 
@@ -97,38 +134,37 @@ mod tests {
 "#;
     #[test]
     fn parse_policies() {
-        assert_eq!(
-            parse(INPUT),
-            vec![
-                Policy {
-                    min: 1,
-                    max: 3,
-                    letter: "a".to_string(),
-                    password: "abcde".to_string(),
-                },
-                Policy {
-                    min: 1,
-                    max: 3,
-                    letter: "b".to_string(),
-                    password: "cdefg".to_string(),
-                },
-                Policy {
-                    min: 2,
-                    max: 9,
-                    letter: "c".to_string(),
-                    password: "ccccccccc".to_string(),
-                },
-            ]
-        );
+        let want = vec![
+            Policy {
+                min: 1,
+                max: 3,
+                letter: "a".to_string(),
+                password: "abcde".to_string(),
+            },
+            Policy {
+                min: 1,
+                max: 3,
+                letter: "b".to_string(),
+                password: "cdefg".to_string(),
+            },
+            Policy {
+                min: 2,
+                max: 9,
+                letter: "c".to_string(),
+                password: "ccccccccc".to_string(),
+            },
+        ];
+        assert_eq!(parse_regex(INPUT), want);
+        assert_eq!(parse_handrolled(INPUT), want);
     }
 
     #[test]
     fn validate_count_part1() {
-        assert_eq!(valid_policy_count_part1(&parse(INPUT)), 2);
+        assert_eq!(valid_policy_count_part1(&parse_regex(INPUT)), 2);
     }
 
     #[test]
     fn validate_count_part2() {
-        assert_eq!(valid_policy_count_part2(&parse(INPUT)), 1);
+        assert_eq!(valid_policy_count_part2(&parse_regex(INPUT)), 1);
     }
 }
