@@ -35,3 +35,15 @@ Day 2 - Part 2 : 472
         generator: 1.374162ms,
         runner: 10.461µs
 ```
+
+## Day 3
+```
+AOC 2020
+Day 3 - Part 1 : 148
+        generator: 40.059µs,
+        runner: 1.345µs
+
+Day 3 - Part 2 : 727923200
+        generator: 95.265µs,
+        runner: 6.908µs
+```
