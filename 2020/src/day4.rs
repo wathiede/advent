@@ -41,6 +41,71 @@
 //! According to the above rules, your improved system would report 2 valid passports.
 //!
 //! Count the number of valid passports - those that have all required fields. Treat cid as optional. In your batch file, how many passports are valid?
+//!
+//! --- Part Two ---
+//! The line is moving more quickly now, but you overhear airport security talking about how passports with invalid data are getting through. Better add some data validation, quick!
+//!
+//! You can continue to ignore the cid field, but each other field has strict rules about what values are valid for automatic validation:
+//!
+//! byr (Birth Year) - four digits; at least 1920 and at most 2002.
+//! iyr (Issue Year) - four digits; at least 2010 and at most 2020.
+//! eyr (Expiration Year) - four digits; at least 2020 and at most 2030.
+//! hgt (Height) - a number followed by either cm or in:
+//! If cm, the number must be at least 150 and at most 193.
+//! If in, the number must be at least 59 and at most 76.
+//! hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
+//! ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth.
+//! pid (Passport ID) - a nine-digit number, including leading zeroes.
+//! cid (Country ID) - ignored, missing or not.
+//! Your job is to count the passports where all required fields are both present and valid according to the above rules. Here are some example values:
+//!
+//! byr valid:   2002
+//! byr invalid: 2003
+//!
+//! hgt valid:   60in
+//! hgt valid:   190cm
+//! hgt invalid: 190in
+//! hgt invalid: 190
+//!
+//! hcl valid:   #123abc
+//! hcl invalid: #123abz
+//! hcl invalid: 123abc
+//!
+//! ecl valid:   brn
+//! ecl invalid: wat
+//!
+//! pid valid:   000000001
+//! pid invalid: 0123456789
+//! Here are some invalid passports:
+//!
+//! eyr:1972 cid:100
+//! hcl:#18171d ecl:amb hgt:170 pid:186cm iyr:2018 byr:1926
+//!
+//! iyr:2019
+//! hcl:#602927 eyr:1967 hgt:170cm
+//! ecl:grn pid:012533040 byr:1946
+//!
+//! hcl:dab227 iyr:2012
+//! ecl:brn hgt:182cm pid:021572410 eyr:2020 byr:1992 cid:277
+//!
+//! hgt:59cm ecl:zzz
+//! eyr:2038 hcl:74454a iyr:2023
+//! pid:3556412378 byr:2007
+//! Here are some valid passports:
+//!
+//! pid:087499704 hgt:74in ecl:grn iyr:2012 eyr:2030 byr:1980
+//! hcl:#623a2f
+//!
+//! eyr:2029 ecl:blu cid:129 byr:1989
+//! iyr:2014 pid:896056539 hcl:#a97842 hgt:165cm
+//!
+//! hcl:#888785
+//! hgt:164cm byr:2001 iyr:2015 cid:88
+//! pid:545766238 ecl:hzl
+//! eyr:2022
+//!
+//! iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719
+//! Count the number of valid passports - those that have all required fields and valid values. Continue to treat cid as optional. In your batch file, how many passports are valid?
 
 use aoc_runner_derive::{aoc, aoc_generator};
 
@@ -64,8 +129,72 @@ struct Passport {
     cid: Option<String>,
 }
 
+fn valid_num(s: &Option<String>, min: u32, max: u32) -> bool {
+    match s {
+        Some(yr) => match yr.parse() {
+            Ok(n) => min <= n && n <= max,
+            Err(_) => false,
+        },
+        None => false,
+    }
+}
+
+fn valid_height(s: &Option<String>) -> bool {
+    if let Some(h) = s {
+        if h.ends_with("cm") {
+            return valid_num(&Some(h[..h.len() - 2].to_string()), 150, 193);
+        };
+        if h.ends_with("in") {
+            return valid_num(&Some(h[..h.len() - 2].to_string()), 59, 76);
+        };
+    }
+    false
+}
+
+fn valid_hair_color(s: &Option<String>) -> bool {
+    if let Some(h) = s {
+        let chars: Vec<_> = h.chars().collect();
+        if chars.len() != 7 {
+            return false;
+        }
+        for c in &chars[1..] {
+            if &'0' <= c && c <= &'f' {
+                continue;
+            }
+        }
+        return true;
+    }
+
+    false
+}
+
+fn valid_eye_color(s: &Option<String>) -> bool {
+    if let Some(c) = s {
+        return match c.as_str() {
+            "amb" | "blu" | "brn" | "gry" | "grn" | "hzl" | "oth" => true,
+            _ => false,
+        };
+    }
+    false
+}
+
+fn valid_passport_id(s: &Option<String>) -> bool {
+    if let Some(pid) = s {
+        if pid.len() != 9 {
+            return false;
+        }
+        for c in pid.chars() {
+            if '0' <= c && c <= '9' {
+                continue;
+            }
+        }
+        return true;
+    }
+    false
+}
+
 impl Passport {
-    fn is_valid(&self) -> bool {
+    fn is_valid_part1(&self) -> bool {
         self.byr.is_some()
             && self.iyr.is_some()
             && self.eyr.is_some()
@@ -73,6 +202,16 @@ impl Passport {
             && self.hcl.is_some()
             && self.ecl.is_some()
             && self.pid.is_some()
+    }
+
+    fn is_valid_part2(&self) -> bool {
+        valid_num(&self.byr, 1920, 2002)
+            && valid_num(&self.iyr, 2010, 2020)
+            && valid_num(&self.eyr, 2020, 2030)
+            && valid_height(&self.hgt)
+            && valid_hair_color(&self.hcl)
+            && valid_eye_color(&self.ecl)
+            && valid_passport_id(&self.pid)
     }
 }
 
@@ -108,7 +247,12 @@ fn parse(input: &str) -> Vec<Passport> {
 
 #[aoc(day4, part1)]
 fn solution_part1(passports: &[Passport]) -> usize {
-    passports.iter().filter(|p| p.is_valid()).count()
+    passports.iter().filter(|p| p.is_valid_part1()).count()
+}
+
+#[aoc(day4, part2)]
+fn solution_part2(passports: &[Passport]) -> usize {
+    passports.iter().filter(|p| p.is_valid_part2()).count()
 }
 
 #[cfg(test)]
@@ -176,5 +320,42 @@ iyr:2011 ecl:brn hgt:59in
                 },
             ]
         );
+    }
+
+    #[test]
+    fn invalid_part2() {
+        let input = r##"eyr:1972 cid:100
+hcl:#18171d ecl:amb hgt:170 pid:186cm iyr:2018 byr:1926
+
+iyr:2019
+hcl:#602927 eyr:1967 hgt:170cm
+ecl:grn pid:012533040 byr:1946
+
+hcl:dab227 iyr:2012
+ecl:brn hgt:182cm pid:021572410 eyr:2020 byr:1992 cid:277
+
+hgt:59cm ecl:zzz
+eyr:2038 hcl:74454a iyr:2023
+pid:3556412378 byr:2007
+"##;
+        assert_eq!(solution_part2(&parse(input)), 0);
+    }
+
+    #[test]
+    fn valid_part2() {
+        let input = r##"pid:087499704 hgt:74in ecl:grn iyr:2012 eyr:2030 byr:1980
+hcl:#623a2f
+
+eyr:2029 ecl:blu cid:129 byr:1989
+iyr:2014 pid:896056539 hcl:#a97842 hgt:165cm
+
+hcl:#888785
+hgt:164cm byr:2001 iyr:2015 cid:88
+pid:545766238 ecl:hzl
+eyr:2022
+
+iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719
+"##;
+        assert_eq!(solution_part2(&parse(input)), 4);
     }
 }
