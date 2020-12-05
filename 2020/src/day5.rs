@@ -105,46 +105,20 @@ fn solution1(seats: &[Seat]) -> u32 {
 
 #[aoc(day5, part1, glenng)]
 fn solution1_glenng(input: &str) -> u32 {
-    struct State {
-        r: u32,
-        r_size: u32,
-        c: u32,
-        c_size: u32,
-    }
     input
         .split('\n')
         .map(|s| {
-            s.chars().fold(
-                State {
-                    r: 0,
-                    r_size: 128 / 2,
-                    c: 0,
-                    c_size: 8 / 2,
-                },
-                |s, c| match c {
-                    'F' => State {
-                        r_size: s.r_size / 2,
-                        ..s
-                    },
-                    'B' => State {
-                        r: s.r + s.r_size,
-                        r_size: s.r_size / 2,
-                        ..s
-                    },
-                    'L' => State {
-                        c_size: s.c_size / 2,
-                        ..s
-                    },
-                    'R' => State {
-                        c: s.c + s.c_size,
-                        c_size: s.c_size / 2,
-                        ..s
-                    },
-                    _ => panic!(format!("unexpected character '{}'", c)),
-                },
-            )
+            s.chars().fold(0, |s, c| match c {
+                'F' | 'L' => s << 1,
+                'B' | 'R' => s << 1 | 1,
+                _ => panic!(format!("unexpected character '{}'", c)),
+            })
         })
-        .map(|s| s.r * 8 + s.c)
+        .map(|s| {
+            let r = s >> 3;
+            let c = s & 0b111;
+            r * 8 + c
+        })
         .max()
         .unwrap()
 }
