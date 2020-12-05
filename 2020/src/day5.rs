@@ -36,6 +36,14 @@
 //! BBFFBBFRLL: row 102, column 4, seat ID 820.
 //! As a sanity check, look through your list of boarding passes. What is the highest seat ID on a boarding pass?
 //!
+//! --- Part Two ---
+//! Ding! The "fasten seat belt" signs have turned on. Time to find your seat.
+//!
+//! It's a completely full flight, so your seat should be the only missing boarding pass in your list. However, there's a catch: some of the seats at the very front and back of the plane don't exist on this aircraft, so they'll be missing from your list as well.
+//!
+//! Your seat wasn't at the very front or back, though; the seats with IDs +1 and -1 from yours will be in your list.
+//!
+//! What is the ID of your seat?
 
 use std::str::FromStr;
 
@@ -80,7 +88,8 @@ impl FromStr for Seat {
     }
 }
 
-#[aoc_generator(day5)]
+#[aoc_generator(day5, part1, wathiede)]
+#[aoc_generator(day5, part2, wathiede)]
 fn parse(input: &str) -> Vec<Seat> {
     input
         .split('\n')
@@ -89,9 +98,69 @@ fn parse(input: &str) -> Vec<Seat> {
         .collect()
 }
 
-#[aoc(day5, part1)]
+#[aoc(day5, part1, wathiede)]
 fn solution1(seats: &[Seat]) -> u32 {
     seats.iter().map(|s| s.id()).max().unwrap()
+}
+
+#[aoc(day5, part1, glenng)]
+fn solution1_glenng(input: &str) -> u32 {
+    struct State {
+        r: u32,
+        r_size: u32,
+        c: u32,
+        c_size: u32,
+    }
+    input
+        .split('\n')
+        .map(|s| {
+            s.chars().fold(
+                State {
+                    r: 0,
+                    r_size: 128 / 2,
+                    c: 0,
+                    c_size: 8 / 2,
+                },
+                |s, c| match c {
+                    'F' => State {
+                        r_size: s.r_size / 2,
+                        ..s
+                    },
+                    'B' => State {
+                        r: s.r + s.r_size,
+                        r_size: s.r_size / 2,
+                        ..s
+                    },
+                    'L' => State {
+                        c_size: s.c_size / 2,
+                        ..s
+                    },
+                    'R' => State {
+                        c: s.c + s.c_size,
+                        c_size: s.c_size / 2,
+                        ..s
+                    },
+                    _ => panic!(format!("unexpected character '{}'", c)),
+                },
+            )
+        })
+        .map(|s| s.r * 8 + s.c)
+        .max()
+        .unwrap()
+}
+
+#[aoc(day5, part2, wathiede)]
+fn solution2(seats: &[Seat]) -> u32 {
+    let mut seat_ids: Vec<_> = seats.iter().map(|s| s.id()).collect();
+    seat_ids.sort();
+    let mut last_id = seat_ids[0];
+    for id in &seat_ids[1..] {
+        if id - last_id != 1 {
+            return id - 1;
+        }
+        last_id = *id;
+    }
+    panic!();
 }
 
 #[cfg(test)]
