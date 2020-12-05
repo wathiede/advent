@@ -107,6 +107,8 @@
 //! iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719
 //! Count the number of valid passports - those that have all required fields and valid values. Continue to treat cid as optional. In your batch file, how many passports are valid?
 
+use std::str::FromStr;
+
 use aoc_runner_derive::{aoc, aoc_generator};
 
 #[derive(Debug, Default, PartialEq)]
@@ -215,8 +217,10 @@ impl Passport {
     }
 }
 
-impl From<&str> for Passport {
-    fn from(input: &str) -> Passport {
+impl FromStr for Passport {
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<Passport, ()> {
         let mut p = Passport::default();
         input
             .replace('\n', " ")
@@ -236,13 +240,13 @@ impl From<&str> for Passport {
                     s => panic!(format!("unknown key: '{}'", s)),
                 };
             });
-        p
+        Ok(p)
     }
 }
 
 #[aoc_generator(day4)]
 fn parse(input: &str) -> Vec<Passport> {
-    input.split("\n\n").map(Passport::from).collect()
+    input.split("\n\n").filter_map(|s| s.parse().ok()).collect()
 }
 
 #[aoc(day4, part1)]
