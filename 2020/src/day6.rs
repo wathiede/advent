@@ -102,6 +102,33 @@ fn solution2(input: &str) -> usize {
         .sum()
 }
 
+#[aoc(day6, part2, faster)]
+fn solution2_faster(input: &str) -> usize {
+    input
+        .split("\n\n")
+        .filter_map(|group| {
+            group.split('\n').fold(None, |acc: Option<HashSet<_>>, p| {
+                match acc {
+                    None => {
+                        // Add all the letters for the first set.
+                        Some(p.chars().collect())
+                    }
+                    Some(acc) => {
+                        // Remove from acc any letters not in p.
+                        let tmp = Some(
+                            p.chars()
+                                .filter(|c| acc.contains(c))
+                                .collect::<HashSet<_>>(),
+                        );
+                        tmp
+                    }
+                }
+            })
+        })
+        .map(|set| set.len())
+        .sum()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

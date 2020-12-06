@@ -4,20 +4,20 @@
 ```
 AOC 2020
 Day 1 - Part 1 - binary : 1006875
-	generator: 11.964µs,
-	runner: 426ns
+	generator: 12.348µs,
+	runner: 551ns
 
 Day 1 - Part 1 - linear : 1006875
-	generator: 4.589µs,
-	runner: 7.476µs
+	generator: 4.772µs,
+	runner: 7.732µs
 
 Day 1 - Part 1 - set : 1006875
-	generator: 16.535µs,
-	runner: 1.799µs
+	generator: 17.746µs,
+	runner: 1.774µs
 
 Day 1 - Part 2 : 165026160
-	generator: 4.114µs,
-	runner: 1.36052ms
+	generator: 4.323µs,
+	runner: 1.365709ms
 
 ```
 
@@ -25,16 +25,16 @@ Day 1 - Part 2 : 165026160
 ```
 AOC 2020
 Day 2 - Part 1 : 640
-	generator: 1.616953ms,
-	runner: 103.011µs
+	generator: 1.612816ms,
+	runner: 109.85µs
 
 Day 2 - Part 1 - handrolled : 640
-	generator: 184.009µs,
-	runner: 101.57µs
+	generator: 174.05µs,
+	runner: 121.356µs
 
 Day 2 - Part 2 : 472
-	generator: 1.352896ms,
-	runner: 9.793µs
+	generator: 1.343394ms,
+	runner: 10.231µs
 
 ```
 
@@ -42,12 +42,12 @@ Day 2 - Part 2 : 472
 ```
 AOC 2020
 Day 3 - Part 1 : 148
-	generator: 53.226µs,
-	runner: 3.183µs
+	generator: 36.372µs,
+	runner: 2.618µs
 
 Day 3 - Part 2 : 727923200
-	generator: 44.07µs,
-	runner: 11.708µs
+	generator: 35.711µs,
+	runner: 11.526µs
 
 ```
 
@@ -55,12 +55,12 @@ Day 3 - Part 2 : 727923200
 ```
 AOC 2020
 Day 4 - Part 1 : 239
-	generator: 411.607µs,
-	runner: 1.791µs
+	generator: 413.353µs,
+	runner: 1.733µs
 
 Day 4 - Part 2 : 188
-	generator: 345.307µs,
-	runner: 45.897µs
+	generator: 344.204µs,
+	runner: 43.386µs
 
 ```
 
@@ -69,15 +69,15 @@ Day 4 - Part 2 : 188
 AOC 2020
 Day 5 - Part 1 - glenng : 989
 	generator: 217ns,
-	runner: 73.448µs
+	runner: 82.517µs
 
 Day 5 - Part 1 - wathiede : 989
-	generator: 77.612µs,
-	runner: 459ns
+	generator: 93.407µs,
+	runner: 451ns
 
 Day 5 - Part 2 - wathiede : 548
-	generator: 79.544µs,
-	runner: 27.281µs
+	generator: 80.326µs,
+	runner: 30.383µs
 
 ```
 
@@ -85,12 +85,16 @@ Day 5 - Part 2 - wathiede : 548
 ```
 AOC 2020
 Day 6 - Part 1 : 6930
-	generator: 260ns,
-	runner: 541.694µs
+	generator: 197ns,
+	runner: 544.074µs
 
 Day 6 - Part 2 : 3585
-	generator: 138ns,
-	runner: 1.897184ms
+	generator: 134ns,
+	runner: 1.882783ms
+
+Day 6 - Part 2 - faster : 3585
+	generator: 114ns,
+	runner: 998.495µs
 
 ```
 
