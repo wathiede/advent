@@ -1,100 +1,74 @@
 # Results
 
-## Day 1
 ```
-AOC 2020
-Day 1 - Part 1 - binary : 1006875
-	generator: 12.348µs,
-	runner: 551ns
+Advent of code 2020
+Day 1 - Part 1 - binary: 1006875
+	generator: 13.685µs,
+	runner: 383ns
 
-Day 1 - Part 1 - linear : 1006875
-	generator: 4.772µs,
-	runner: 7.732µs
+Day 1 - Part 1 - linear: 1006875
+	generator: 4.471µs,
+	runner: 6.725µs
 
-Day 1 - Part 1 - set : 1006875
-	generator: 17.746µs,
-	runner: 1.774µs
+Day 1 - Part 1 - set: 1006875
+	generator: 15.98µs,
+	runner: 723ns
 
-Day 1 - Part 2 : 165026160
-	generator: 4.323µs,
-	runner: 1.365709ms
+Day 1 - Part 2: 165026160
+	generator: 3.944µs,
+	runner: 1.18955ms
 
-```
+Day 2 - Part 1: 640
+	generator: 1.968685ms,
+	runner: 91.9µs
 
-## Day 2
-```
-AOC 2020
-Day 2 - Part 1 : 640
-	generator: 1.612816ms,
-	runner: 109.85µs
+Day 2 - Part 1 - handrolled: 640
+	generator: 161.154µs,
+	runner: 91.825µs
 
-Day 2 - Part 1 - handrolled : 640
-	generator: 174.05µs,
-	runner: 121.356µs
+Day 2 - Part 2: 472
+	generator: 1.430852ms,
+	runner: 9.525µs
 
-Day 2 - Part 2 : 472
-	generator: 1.343394ms,
-	runner: 10.231µs
+Day 3 - Part 1: 148
+	generator: 32.889µs,
+	runner: 2.277µs
 
-```
+Day 3 - Part 2: 727923200
+	generator: 29.657µs,
+	runner: 9.883µs
 
-## Day 3
-```
-AOC 2020
-Day 3 - Part 1 : 148
-	generator: 36.372µs,
-	runner: 2.618µs
+Day 4 - Part 1: 239
+	generator: 421.829µs,
+	runner: 1.585µs
 
-Day 3 - Part 2 : 727923200
-	generator: 35.711µs,
-	runner: 11.526µs
+Day 4 - Part 2: 188
+	generator: 405.105µs,
+	runner: 37.591µs
 
-```
+Day 5 - Part 1 - glenng: 989
+	generator: 163ns,
+	runner: 68.995µs
 
-## Day 4
-```
-AOC 2020
-Day 4 - Part 1 : 239
-	generator: 413.353µs,
-	runner: 1.733µs
+Day 5 - Part 1 - wathiede: 989
+	generator: 75.661µs,
+	runner: 396ns
 
-Day 4 - Part 2 : 188
-	generator: 344.204µs,
-	runner: 43.386µs
+Day 5 - Part 2 - wathiede: 548
+	generator: 68.215µs,
+	runner: 24.548µs
 
-```
+Day 6 - Part 1: 6930
+	generator: 105ns,
+	runner: 543.519µs
 
-## Day 5
-```
-AOC 2020
-Day 5 - Part 1 - glenng : 989
-	generator: 217ns,
-	runner: 82.517µs
+Day 6 - Part 2: 3585
+	generator: 105ns,
+	runner: 1.697685ms
 
-Day 5 - Part 1 - wathiede : 989
-	generator: 93.407µs,
-	runner: 451ns
-
-Day 5 - Part 2 - wathiede : 548
-	generator: 80.326µs,
-	runner: 30.383µs
-
-```
-
-## Day 6
-```
-AOC 2020
-Day 6 - Part 1 : 6930
-	generator: 197ns,
-	runner: 544.074µs
-
-Day 6 - Part 2 : 3585
-	generator: 134ns,
-	runner: 1.882783ms
-
-Day 6 - Part 2 - faster : 3585
-	generator: 114ns,
-	runner: 998.495µs
+Day 6 - Part 2 - faster: 3585
+	generator: 103ns,
+	runner: 905.259µs
 
 ```
 
