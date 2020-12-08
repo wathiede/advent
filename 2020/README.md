@@ -1,79 +1,79 @@
 ```
 Advent of code 2020
 Day 1 - Part 1 - binary: 1006875
-	generator: 16.209µs,
-	runner: 422ns
+	generator: 13.293µs,
+	runner: 319ns
 
 Day 1 - Part 1 - linear: 1006875
-	generator: 4.791µs,
-	runner: 7.318µs
+	generator: 4µs,
+	runner: 6.348µs
 
 Day 1 - Part 1 - set: 1006875
-	generator: 18.621µs,
-	runner: 3.662µs
+	generator: 16.221µs,
+	runner: 410ns
 
 Day 1 - Part 2: 165026160
-	generator: 4.438µs,
-	runner: 1.332333ms
+	generator: 3.59µs,
+	runner: 1.30452ms
 
 Day 2 - Part 1: 640
-	generator: 1.79354ms,
-	runner: 96.794µs
+	generator: 1.649456ms,
+	runner: 93.105µs
 
 Day 2 - Part 1 - handrolled: 640
-	generator: 199.195µs,
-	runner: 93.285µs
+	generator: 143.634µs,
+	runner: 85.694µs
 
 Day 2 - Part 2: 472
-	generator: 1.413151ms,
-	runner: 8.577µs
+	generator: 1.332501ms,
+	runner: 8.54µs
 
 Day 3 - Part 1: 148
-	generator: 31.656µs,
-	runner: 1.076µs
+	generator: 30.709µs,
+	runner: 1.054µs
 
 Day 3 - Part 2: 727923200
-	generator: 70.009µs,
-	runner: 4.036µs
+	generator: 29.495µs,
+	runner: 3.764µs
 
 Day 4 - Part 1: 239
-	generator: 404.316µs,
-	runner: 1.432µs
+	generator: 308.073µs,
+	runner: 1.493µs
 
 Day 4 - Part 2: 188
-	generator: 301.235µs,
-	runner: 35.792µs
+	generator: 331.551µs,
+	runner: 35.664µs
 
 Day 5 - Part 1 - glenng: 989
-	generator: 139ns,
-	runner: 98.943µs
+	generator: 165ns,
+	runner: 68.468µs
 
 Day 5 - Part 1 - wathiede: 989
-	generator: 122.823µs,
-	runner: 731ns
+	generator: 74.07µs,
+	runner: 601ns
 
 Day 5 - Part 2 - wathiede: 548
-	generator: 99.758µs,
-	runner: 39.102µs
+	generator: 68.613µs,
+	runner: 24.979µs
 
 Day 6 - Part 1: 6930
-	generator: 118ns,
-	runner: 519.549µs
+	generator: 100ns,
+	runner: 474.548µs
 
 Day 6 - Part 2: 3585
-	generator: 121ns,
-	runner: 2.462069ms
+	generator: 106ns,
+	runner: 1.770318ms
 
 Day 6 - Part 2 - faster: 3585
-	generator: 213ns,
-	runner: 1.404952ms
+	generator: 122ns,
+	runner: 901.158µs
 
 Day 7 - Part 1: 222
-	generator: 1.682133ms,
-	runner: 267.051µs
+	generator: 1.025666ms,
+	runner: 167.153µs
 
 Day 7 - Part 2: 13264
-	generator: 1.437891ms,
-	runner: 4.245µs
+	generator: 847.191µs,
+	runner: 3.666µs
 
 ```
