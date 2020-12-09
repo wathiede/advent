@@ -39,12 +39,48 @@
 //! Immediately before the program would run an instruction a second time, the value in the accumulator is 5.
 //!
 //! Run your copy of the boot code. Immediately before any instruction is executed a second time, what value is in the accumulator?
+//!
+
+//! --- Part Two ---
+//! After some careful analysis, you believe that exactly one instruction is corrupted.
+//!
+//! Somewhere in the program, either a jmp is supposed to be a nop, or a nop is supposed to be a jmp. (No acc instructions were harmed in the corruption of this boot code.)
+//!
+//! The program is supposed to terminate by attempting to execute an instruction immediately after the last instruction in the file. By changing exactly one jmp or nop, you can repair the boot code and make it terminate correctly.
+//!
+//! For example, consider the same program from above:
+//!
+//! nop +0
+//! acc +1
+//! jmp +4
+//! acc +3
+//! jmp -3
+//! acc -99
+//! acc +1
+//! jmp -4
+//! acc +6
+//! If you change the first instruction from nop +0 to jmp +0, it would create a single-instruction infinite loop, never leaving that instruction. If you change almost any of the jmp instructions, the program will still eventually find another jmp instruction and loop forever.
+//!
+//! However, if you change the second-to-last instruction (from jmp -4 to nop -4), the program terminates! The instructions are visited in this order:
+//!
+//! nop +0  | 1
+//! acc +1  | 2
+//! jmp +4  | 3
+//! acc +3  |
+//! jmp -3  |
+//! acc -99 |
+//! acc +1  | 4
+//! nop -4  | 5
+//! acc +6  | 6
+//! After the last instruction (acc +6), the program terminates by attempting to run the instruction below the last instruction in the file. With this change, after the program terminates, the accumulator contains the value 8 (acc +1, acc +1, acc +6).
+//!
+//! Fix the program so that it terminates normally by changing exactly one jmp (to nop) or nop (to jmp). What is the value of the accumulator after the program terminates?
 
 use std::str::FromStr;
 
 use aoc_runner_derive::aoc;
 
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 enum Instruction {
     Nop(i32),
     Acc(i32),
@@ -73,6 +109,43 @@ struct Program {
 }
 
 impl Program {
+    fn reset(&mut self) {
+        self.ip = 0;
+        self.acc = 0;
+        self.executed.iter_mut().for_each(|i| *i = false);
+    }
+    fn debug(&mut self, bad_ip: usize) -> Option<i32> {
+        loop {
+            if self.executed[self.ip] {
+                return None;
+            }
+            self.executed[self.ip] = true;
+            let intr = self.intrs[self.ip];
+            let intr = if self.ip == bad_ip {
+                match intr {
+                    // Swap instruction as this is a possible bug location.
+                    Instruction::Nop(op) => Instruction::Jmp(op),
+                    Instruction::Jmp(op) => Instruction::Nop(op),
+                    // Acc can't be buggy per the instructions.
+                    Instruction::Acc(_) => return None,
+                }
+            } else {
+                intr
+            };
+            match intr {
+                Instruction::Nop(_) => self.ip += 1,
+                Instruction::Acc(op) => {
+                    self.acc += op;
+                    self.ip += 1;
+                }
+                Instruction::Jmp(op) => self.ip = (self.ip as i32 + op) as usize,
+            }
+            if self.ip >= self.intrs.len() {
+                return Some(self.acc);
+            }
+        }
+    }
+
     fn run(&mut self) -> i32 {
         loop {
             if self.executed[self.ip] {
@@ -109,6 +182,18 @@ impl FromStr for Program {
 fn solution1(input: &str) -> i32 {
     let mut p: Program = input.parse().expect("Failed to parse Program");
     p.run()
+}
+
+#[aoc(day8, part2)]
+fn solution2(input: &str) -> i32 {
+    let mut p: Program = input.parse().expect("Failed to parse Program");
+    for bad_ip in 0..p.intrs.len() {
+        if let Some(acc) = p.debug(bad_ip) {
+            return acc;
+        }
+        p.reset();
+    }
+    panic!("no bugfix found")
 }
 
 #[cfg(test)]
@@ -151,5 +236,10 @@ acc +6"#;
     #[test]
     fn part1() {
         assert_eq!(solution1(&INPUT1), 5);
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(solution2(&INPUT1), 8);
     }
 }
