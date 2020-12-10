@@ -100,9 +100,7 @@ fn solution1_impl(nums: &[usize], win_size: usize) -> usize {
 
             false
         })
-        // TODO(wathiede): try find_map()
-        .map(|chunk| chunk[win_size])
-        .nth(0)
+        .find_map(|chunk| Some(chunk[win_size]))
         .unwrap()
 }
 
@@ -112,8 +110,12 @@ fn solution1(nums: &[usize]) -> usize {
 }
 
 fn sum_min_max(low: usize, hi: usize, nums: &[usize]) -> usize {
-    // TODO(wathiede): rewrite with fold to do it in one pass.
-    nums[low..hi].iter().min().unwrap() + nums[low..hi].iter().max().unwrap()
+    let (min, max) = nums[low..hi]
+        .iter()
+        .fold((usize::MAX, 0), |(min, max), &n| {
+            (std::cmp::min(min, n), std::cmp::max(max, n))
+        });
+    min + max
 }
 
 // If contiguous numbers adding up to `sum` are found, the hi index (inclusive) is returned.
@@ -134,7 +136,6 @@ fn find_sum_at(low: usize, nums: &[usize], sum: usize) -> Option<usize> {
 
 fn solution2_impl(nums: &[usize], win_size: usize) -> usize {
     let sum = solution1_impl(nums, win_size);
-    dbg!(sum);
     for low in 0..nums.len() - 1 {
         if let Some(hi) = find_sum_at(low, nums, sum) {
             return sum_min_max(low, hi, nums);
