@@ -75,8 +75,6 @@
 //!
 //! What is the encryption weakness in your XMAS-encrypted list of numbers?
 
-use std::collections::HashSet;
-
 use aoc_runner_derive::{aoc, aoc_generator};
 
 #[aoc_generator(day9)]
