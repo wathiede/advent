@@ -87,7 +87,6 @@ fn parse(input: &str) -> Vec<usize> {
 
 fn solution1_impl(nums: &[usize], win_size: usize) -> usize {
     nums.windows(win_size + 1)
-        // TODO(wathiede): try soring and/or hashmap for speed.
         .skip_while(|chunk| {
             let past = &chunk[..win_size];
             let cur = chunk[win_size];
@@ -104,9 +103,33 @@ fn solution1_impl(nums: &[usize], win_size: usize) -> usize {
         .unwrap()
 }
 
+fn solution1_impl_sorted(nums: &[usize], win_size: usize) -> usize {
+    nums.windows(win_size + 1)
+        .skip_while(|chunk| {
+            let mut past = (&chunk[..win_size]).clone().to_owned();
+            past.sort_unstable();
+            let cur = chunk[win_size];
+            for p in &past {
+                let diff = if cur > *p { cur - p } else { p - cur };
+                if past.binary_search(&diff).is_ok() {
+                    return true;
+                }
+            }
+
+            false
+        })
+        .find_map(|chunk| Some(chunk[win_size]))
+        .unwrap()
+}
+
 #[aoc(day9, part1)]
 fn solution1(nums: &[usize]) -> usize {
     solution1_impl(nums, 25)
+}
+
+#[aoc(day9, part1, sorted)]
+fn solution1_sorted(nums: &[usize]) -> usize {
+    solution1_impl_sorted(nums, 25)
 }
 
 fn sum_min_max(low: usize, hi: usize, nums: &[usize]) -> usize {
