@@ -43,17 +43,51 @@
 //! In this example, after the 5-number preamble, almost every number is the sum of two of the previous 5 numbers; the only number that does not follow this rule is 127.
 //!
 //! The first step of attacking the weakness in the XMAS data is to find the first number in the list (after the preamble) which is not the sum of two of the 25 numbers before it. What is the first number that does not have this property?
+//!
+//! --- Part Two ---
+//! The final step in breaking the XMAS encryption relies on the invalid number you just found: you must find a contiguous set of at least two numbers in your list which sum to the invalid number from step 1.
+//!
+//! Again consider the above example:
+//!
+//! 35
+//! 20
+//! 15
+//! 25
+//! 47
+//! 40
+//! 62
+//! 55
+//! 65
+//! 95
+//! 102
+//! 117
+//! 150
+//! 182
+//! 127
+//! 219
+//! 299
+//! 277
+//! 309
+//! 576
+//! In this list, adding up all of the numbers from 15 through 40 produces the invalid number from step 1, 127. (Of course, the contiguous set of numbers in your actual list might be much longer.)
+//!
+//! To find the encryption weakness, add together the smallest and largest number in this contiguous range; in this example, these are 15 and 47, producing 62.
+//!
+//! What is the encryption weakness in your XMAS-encrypted list of numbers?
 
 use std::collections::HashSet;
 
 use aoc_runner_derive::{aoc, aoc_generator};
 
-fn solution1_impl(input: &str, win_size: usize) -> usize {
-    let nums = input
+#[aoc_generator(day9)]
+fn parse(input: &str) -> Vec<usize> {
+    input
         .split('\n')
         .map(|s| s.parse::<usize>().unwrap())
-        .collect::<Vec<_>>();
+        .collect::<Vec<_>>()
+}
 
+fn solution1_impl(nums: &[usize], win_size: usize) -> usize {
     nums.windows(win_size + 1)
         // TODO(wathiede): try soring and/or hashmap for speed.
         .skip_while(|chunk| {
@@ -68,14 +102,52 @@ fn solution1_impl(input: &str, win_size: usize) -> usize {
 
             false
         })
+        // TODO(wathiede): try find_map()
         .map(|chunk| chunk[win_size])
         .nth(0)
         .unwrap()
 }
 
 #[aoc(day9, part1)]
-fn solution1(input: &str) -> usize {
-    solution1_impl(input, 25)
+fn solution1(nums: &[usize]) -> usize {
+    solution1_impl(nums, 25)
+}
+
+fn sum_min_max(low: usize, hi: usize, nums: &[usize]) -> usize {
+    // TODO(wathiede): rewrite with fold to do it in one pass.
+    nums[low..hi].iter().min().unwrap() + nums[low..hi].iter().max().unwrap()
+}
+
+// If contiguous numbers adding up to `sum` are found, the hi index (inclusive) is returned.
+fn find_sum_at(low: usize, nums: &[usize], sum: usize) -> Option<usize> {
+    let mut p_sum = nums[low];
+    for hi in low + 1..nums.len() {
+        let n = nums[hi];
+        p_sum += n;
+        if p_sum == sum {
+            return Some(hi + 1);
+        }
+        if p_sum > sum {
+            return None;
+        }
+    }
+    unreachable!();
+}
+
+fn solution2_impl(nums: &[usize], win_size: usize) -> usize {
+    let sum = solution1_impl(nums, win_size);
+    dbg!(sum);
+    for low in 0..nums.len() - 1 {
+        if let Some(hi) = find_sum_at(low, nums, sum) {
+            return sum_min_max(low, hi, nums);
+        }
+    }
+    unreachable!();
+}
+
+#[aoc(day9, part2)]
+fn solution2(nums: &[usize]) -> usize {
+    solution2_impl(nums, 25)
 }
 
 #[cfg(test)]
@@ -104,6 +176,11 @@ mod tests {
 
     #[test]
     fn part1() {
-        assert_eq!(solution1_impl(&INPUT, 5), 127);
+        assert_eq!(solution1_impl(&parse(&INPUT), 5), 127);
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(solution2_impl(&parse(&INPUT), 5), 62);
     }
 }
