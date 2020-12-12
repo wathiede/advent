@@ -84,6 +84,112 @@
 //! At this point, something interesting happens: the chaos stabilizes and further applications of these rules cause no seats to change state! Once people stop moving around, you count 37 occupied seats.
 //!
 //! Simulate your seating area by applying the seating rules repeatedly until no seats change state. How many seats end up occupied?
+//!
+//! --- Part Two ---
+//! As soon as people start to arrive, you realize your mistake. People don't just care about adjacent seats - they care about the first seat they can see in each of those eight directions!
+//!
+//! Now, instead of considering just the eight immediately adjacent seats, consider the first seat in each of those eight directions. For example, the empty seat below would see eight occupied seats:
+//!
+//! .......#.
+//! ...#.....
+//! .#.......
+//! .........
+//! ..#L....#
+//! ....#....
+//! .........
+//! #........
+//! ...#.....
+//! The leftmost empty seat below would only see one empty seat, but cannot see any of the occupied ones:
+//!
+//! .............
+//! .L.L.#.#.#.#.
+//! .............
+//! The empty seat below would see no occupied seats:
+//!
+//! .##.##.
+//! #.#.#.#
+//! ##...##
+//! ...L...
+//! ##...##
+//! #.#.#.#
+//! .##.##.
+//! Also, people seem to be more tolerant than you expected: it now takes five or more visible occupied seats for an occupied seat to become empty (rather than four or more from the previous rules). The other rules still apply: empty seats that see no occupied seats become occupied, seats matching no rule don't change, and floor never changes.
+//!
+//! Given the same starting layout as above, these new rules cause the seating area to shift around as follows:
+//!
+//! L.LL.LL.LL
+//! LLLLLLL.LL
+//! L.L.L..L..
+//! LLLL.LL.LL
+//! L.LL.LL.LL
+//! L.LLLLL.LL
+//! ..L.L.....
+//! LLLLLLLLLL
+//! L.LLLLLL.L
+//! L.LLLLL.LL
+//! #.##.##.##
+//! #######.##
+//! #.#.#..#..
+//! ####.##.##
+//! #.##.##.##
+//! #.#####.##
+//! ..#.#.....
+//! ##########
+//! #.######.#
+//! #.#####.##
+//! #.LL.LL.L#
+//! #LLLLLL.LL
+//! L.L.L..L..
+//! LLLL.LL.LL
+//! L.LL.LL.LL
+//! L.LLLLL.LL
+//! ..L.L.....
+//! LLLLLLLLL#
+//! #.LLLLLL.L
+//! #.LLLLL.L#
+//! #.L#.##.L#
+//! #L#####.LL
+//! L.#.#..#..
+//! ##L#.##.##
+//! #.##.#L.##
+//! #.#####.#L
+//! ..#.#.....
+//! LLL####LL#
+//! #.L#####.L
+//! #.L####.L#
+//! #.L#.L#.L#
+//! #LLLLLL.LL
+//! L.L.L..#..
+//! ##LL.LL.L#
+//! L.LL.LL.L#
+//! #.LLLLL.LL
+//! ..L.L.....
+//! LLLLLLLLL#
+//! #.LLLLL#.L
+//! #.L#LL#.L#
+//! #.L#.L#.L#
+//! #LLLLLL.LL
+//! L.L.L..#..
+//! ##L#.#L.L#
+//! L.L#.#L.L#
+//! #.L####.LL
+//! ..#.#.....
+//! LLL###LLL#
+//! #.LLLLL#.L
+//! #.L#LL#.L#
+//! #.L#.L#.L#
+//! #LLLLLL.LL
+//! L.L.L..#..
+//! ##L#.#L.L#
+//! L.L#.LL.L#
+//! #.LLLL#.LL
+//! ..#.L.....
+//! LLL###LLL#
+//! #.LLLLL#.L
+//! #.L#LL#.L#
+//! Again, at this point, people stop shifting around and the seating area reaches equilibrium. Once this occurs, you count 26 occupied seats.
+//!
+//! Given the new visibility method and the rule change for occupied seats becoming empty, once equilibrium is reached, how many seats end up occupied?
 
 use std::convert::TryFrom;
 use std::str::FromStr;
@@ -233,12 +339,68 @@ impl Map {
         cnt
     }
 
+    /// Counts number of occupied seats in 8 cardinal directions.  Stops if it hits an empty seat.
+    fn line_of_sight_count(&self, x: usize, y: usize) -> usize {
+        let incs = vec![
+            // Right
+            (1, 0),
+            // Left
+            (-1, 0),
+            // Up
+            (0, -1),
+            // Down
+            (0, 1),
+            // Up-right
+            (1, -1),
+            // Up-left
+            (-1, -1),
+            // Down-right
+            (1, 1),
+            // Down-left
+            (-1, 1),
+        ];
+
+        incs.into_iter()
+            .map(|inc| self.shoot(x, y, inc))
+            .filter(|&v| v)
+            .count()
+    }
+
+    /// Iterates over the map using the offsets until it hits an occupied seat or edge.
+    /// If an occupied seat is found before an unoccupied seat or edge, true is returned.
+    /// If an unoccupied seat is found before an occupied seat or edge, false is returned.
+    /// If an edge is hit, false is returned.
+    /// Floors are ignored.
+    fn shoot(&self, x: usize, y: usize, (x_off, y_off): (isize, isize)) -> bool {
+        let mut x = x as isize;
+        let mut y = y as isize;
+        let width = self.width as isize;
+        let height = self.height as isize;
+        loop {
+            x = x + x_off;
+            y = y + y_off;
+
+            // Hit an edge.
+            if x < 0 || y < 0 || x >= width || y >= height {
+                return false;
+            }
+
+            let s = self[(x as usize, y as usize)];
+            if let State::Empty = s {
+                return false;
+            }
+            if let State::Occupied = s {
+                return true;
+            }
+        }
+    }
+
     fn occupied_count(&self) -> usize {
         self.cells.iter().filter(|&c| c == &State::Occupied).count()
     }
 }
 
-fn step(map: &Map) -> Map {
+fn step_solution1(map: &Map) -> Map {
     let mut new_m = Map::new(map.width, map.height);
     for y in 0..map.height {
         for x in 0..map.width {
@@ -258,6 +420,26 @@ fn step(map: &Map) -> Map {
     new_m
 }
 
+fn step_solution2(map: &Map) -> Map {
+    let mut new_m = Map::new(map.width, map.height);
+    for y in 0..map.height {
+        for x in 0..map.width {
+            // Floor's never change
+            if map[(x, y)] == State::Floor {
+                new_m[(x, y)] = State::Floor;
+                continue;
+            }
+            let new_cell = match map.line_of_sight_count(x, y) {
+                0 => State::Occupied,
+                c if c >= 5 => State::Empty,
+                _ => map[(x, y)],
+            };
+            new_m[(x, y)] = new_cell;
+        }
+    }
+    new_m
+}
+
 #[aoc_generator(day11)]
 fn parse(input: &str) -> Map {
     input.parse().expect("Failed to parse map")
@@ -265,13 +447,26 @@ fn parse(input: &str) -> Map {
 
 #[aoc(day11, part1)]
 fn solution1(map: &Map) -> usize {
-    let mut prev = step(map);
-    let mut cur = step(&prev);
+    let mut prev = step_solution1(map);
+    let mut cur = step_solution1(&prev);
     while prev != cur {
         // Show map animating.
         // println!("{}", cur);
         prev = cur;
-        cur = step(&prev);
+        cur = step_solution1(&prev);
+    }
+    cur.occupied_count()
+}
+
+#[aoc(day11, part2)]
+fn solution2(map: &Map) -> usize {
+    let mut prev = step_solution2(map);
+    let mut cur = step_solution2(&prev);
+    while prev != cur {
+        // Show map animating.
+        // println!("{}", cur);
+        prev = cur;
+        cur = step_solution2(&prev);
     }
     cur.occupied_count()
 }
@@ -321,41 +516,41 @@ mod tests {
 #.#####.##"#,
             r#"#.LL.L#.##
 #LLLLLL.L#
-            L.L.L..L..
+                L.L.L..L..
 #LLL.LL.L#
 #.LL.LL.LL
 #.LLLL#.##
-            ..L.L.....
+                ..L.L.....
 #LLLLLLLL#
 #.LLLLLL.L
 #.#LLLL.##"#,
             r#"#.##.L#.##
 #L###LL.L#
-            L.#.#..#..
+                L.#.#..#..
 #L##.##.L#
 #.##.LL.LL
 #.###L#.##
-            ..#.#.....
+                ..#.#.....
 #L######L#
 #.LL###L.L
 #.#L###.##"#,
             r#"#.#L.L#.##
 #LLL#LL.L#
-            L.L.L..#..
+                L.L.L..#..
 #LLL.##.L#
 #.LL.LL.LL
 #.LL#L#.##
-            ..L.L.....
+                ..L.L.....
 #L#LLLL#L#
 #.LLLLLL.L
 #.#L#L#.##"#,
             r#"#.#L.L#.##
 #LLL#LL.L#
-            L.#.L..#..
+                L.#.L..#..
 #L##.##.L#
 #.#L.LL.LL
 #.#L#L#.##
-            ..L.L.....
+                ..L.L.....
 #L#L##L#L#
 #.LLLLLL.L
 #.#L#L#.##"#,
@@ -370,7 +565,155 @@ mod tests {
             let want: Map = want_input
                 .parse()
                 .expect(&format!("Failed to parse step {}", i));
-            let got = step(&m);
+            let got = step_solution1(&m);
+            assert_eq!(want, got, "step {}\nm {}", i, m);
+            m = got;
+        }
+    }
+
+    #[test]
+    fn line_of_sight_count() {
+        let test_input = vec![
+            (
+                8,
+                (3, 4),
+                r#".......#.
+                ...#.....
+                .#.......
+                .........
+                ..#L....#
+                ....#....
+                .........
+#........
+                ...#....."#
+                    .replace(' ', ""),
+            ),
+            (
+                4,
+                (3, 0),
+                r#"#.L#.##.L#
+#L#####.LL
+L.#.#..#..
+##L#.##.##
+#.##.#L.##
+#.#####.#L
+..#.#.....
+LLL####LL#
+#.L#####.L
+#.L####.L#"#
+                    .replace(' ', ""),
+            ),
+            (
+                0,
+                (1, 1),
+                r#".............
+                .L.L.#.#.#.#.
+                ............."#
+                    .replace(' ', ""),
+            ),
+            (
+                0,
+                (3, 3),
+                r#".##.##.
+#.#.#.#
+##...##
+                ...L...
+##...##
+#.#.#.#
+                .##.##."#
+                    .replace(' ', ""),
+            ),
+        ];
+        for (want, (x, y), input) in test_input {
+            let m: Map = input.parse().expect("Failed to parse map data");
+            assert_eq!(want, m.line_of_sight_count(x, y), "map {}", m);
+        }
+    }
+
+    #[test]
+    fn solution2() {
+        let input = r#"L.LL.LL.LL
+            LLLLLLL.LL
+            L.L.L..L..
+            LLLL.LL.LL
+            L.LL.LL.LL
+            L.LLLLL.LL
+            ..L.L.....
+            LLLLLLLLLL
+            L.LLLLLL.L
+            L.LLLLL.LL"#
+            .replace(' ', "");
+        let steps: Vec<_> = vec![
+            r#"#.##.##.##
+#######.##
+#.#.#..#..
+####.##.##
+#.##.##.##
+#.#####.##
+..#.#.....
+##########
+#.######.#
+#.#####.##"#,
+            r#"#.LL.LL.L#
+#LLLLLL.LL
+L.L.L..L..
+LLLL.LL.LL
+L.LL.LL.LL
+L.LLLLL.LL
+..L.L.....
+LLLLLLLLL#
+#.LLLLLL.L
+#.LLLLL.L#"#,
+            r#"#.L#.##.L#
+#L#####.LL
+L.#.#..#..
+##L#.##.##
+#.##.#L.##
+#.#####.#L
+..#.#.....
+LLL####LL#
+#.L#####.L
+#.L####.L#"#,
+            r#"#.L#.L#.L#
+#LLLLLL.LL
+L.L.L..#..
+##LL.LL.L#
+L.LL.LL.L#
+#.LLLLL.LL
+..L.L.....
+LLLLLLLLL#
+#.LLLLL#.L
+#.L#LL#.L#"#,
+            r#"#.L#.L#.L#
+#LLLLLL.LL
+L.L.L..#..
+##L#.#L.L#
+L.L#.#L.L#
+#.L####.LL
+..#.#.....
+LLL###LLL#
+#.LLLLL#.L
+#.L#LL#.L#"#,
+            r#"#.L#.L#.L#
+#LLLLLL.LL
+L.L.L..#..
+##L#.#L.L#
+L.L#.LL.L#
+#.LLLL#.LL
+..#.L.....
+LLL###LLL#
+#.LLLLL#.L
+#.L#LL#.L#"#,
+        ]
+        .iter()
+        .map(|s| s.replace(' ', ""))
+        .collect();
+        let mut m = input.parse().expect("Failed to parse map");
+        for (i, want_input) in steps.iter().enumerate() {
+            let want: Map = want_input
+                .parse()
+                .expect(&format!("Failed to parse step {}", i));
+            let got = step_solution2(&m);
             assert_eq!(want, got, "step {}\nm {}", i, m);
             m = got;
         }
