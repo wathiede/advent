@@ -79,16 +79,75 @@
 //!
 //! Find a chain that uses all of your adapters to connect the charging outlet to your device's built-in adapter and count the joltage differences between the charging outlet, the adapters, and your device. What is the number of 1-jolt differences multiplied by the number of 3-jolt differences?
 //!
+//! --- Part Two ---
+//! To completely determine whether you have enough adapters, you'll need to figure out how many different ways they can be arranged. Every arrangement needs to connect the charging outlet to your device. The previous rules about when adapters can successfully connect still apply.
+//!
+//! The first example above (the one that starts with 16, 10, 15) supports the following arrangements:
+//!
+//! (0), 1, 4, 5, 6, 7, 10, 11, 12, 15, 16, 19, (22)
+//! (0), 1, 4, 5, 6, 7, 10, 12, 15, 16, 19, (22)
+//! (0), 1, 4, 5, 7, 10, 11, 12, 15, 16, 19, (22)
+//! (0), 1, 4, 5, 7, 10, 12, 15, 16, 19, (22)
+//! (0), 1, 4, 6, 7, 10, 11, 12, 15, 16, 19, (22)
+//! (0), 1, 4, 6, 7, 10, 12, 15, 16, 19, (22)
+//! (0), 1, 4, 7, 10, 11, 12, 15, 16, 19, (22)
+//! (0), 1, 4, 7, 10, 12, 15, 16, 19, (22)
+//! (The charging outlet and your device's built-in adapter are shown in parentheses.) Given the adapters from the first example, the total number of arrangements that connect the charging outlet to your device is 8.
+//!
+//! The second example above (the one that starts with 28, 33, 18) has many arrangements. Here are a few:
+//!
+//! (0), 1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 17, 18, 19, 20, 23, 24, 25, 28, 31,
+//! 32, 33, 34, 35, 38, 39, 42, 45, 46, 47, 48, 49, (52)
+//!
+//! (0), 1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 17, 18, 19, 20, 23, 24, 25, 28, 31,
+//! 32, 33, 34, 35, 38, 39, 42, 45, 46, 47, 49, (52)
+//!
+//! (0), 1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 17, 18, 19, 20, 23, 24, 25, 28, 31,
+//! 32, 33, 34, 35, 38, 39, 42, 45, 46, 48, 49, (52)
+//!
+//! (0), 1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 17, 18, 19, 20, 23, 24, 25, 28, 31,
+//! 32, 33, 34, 35, 38, 39, 42, 45, 46, 49, (52)
+//!
+//! (0), 1, 2, 3, 4, 7, 8, 9, 10, 11, 14, 17, 18, 19, 20, 23, 24, 25, 28, 31,
+//! 32, 33, 34, 35, 38, 39, 42, 45, 47, 48, 49, (52)
+//!
+//! (0), 3, 4, 7, 10, 11, 14, 17, 20, 23, 25, 28, 31, 34, 35, 38, 39, 42, 45,
+//! 46, 48, 49, (52)
+//!
+//! (0), 3, 4, 7, 10, 11, 14, 17, 20, 23, 25, 28, 31, 34, 35, 38, 39, 42, 45,
+//! 46, 49, (52)
+//!
+//! (0), 3, 4, 7, 10, 11, 14, 17, 20, 23, 25, 28, 31, 34, 35, 38, 39, 42, 45,
+//! 47, 48, 49, (52)
+//!
+//! (0), 3, 4, 7, 10, 11, 14, 17, 20, 23, 25, 28, 31, 34, 35, 38, 39, 42, 45,
+//! 47, 49, (52)
+//!
+//! (0), 3, 4, 7, 10, 11, 14, 17, 20, 23, 25, 28, 31, 34, 35, 38, 39, 42, 45,
+//! 48, 49, (52)
+//! In total, this set of adapters can connect the charging outlet to your device in 19208 distinct arrangements.
+//!
+//! You glance back down at your bag and try to remember why you brought so many adapters; there must be more than a trillion valid ways to arrange them! Surely, there must be an efficient way to count the arrangements.
+//!
+//! What is the total number of distinct ways you can arrange the adapters to connect the charging outlet to your device?
 
-use aoc_runner_derive::aoc;
+use std::collections::HashMap;
+
+use aoc_runner_derive::{aoc, aoc_generator};
+
+#[aoc_generator(day10)]
+fn parse(input: &str) -> Vec<usize> {
+    let mut jolts: Vec<_> = input.split('\n').map(|s| s.parse().unwrap()).collect();
+    // Add outlet
+    jolts.push(0);
+    // Add device power adapter
+    jolts.push(jolts.iter().max().unwrap() + 3);
+    jolts.sort();
+    jolts
+}
 
 #[aoc(day10, part1)]
-fn solution1(input: &str) -> usize {
-    let mut jolts: Vec<_> = input
-        .split('\n')
-        .map(|s| s.parse::<usize>().unwrap())
-        .collect();
-    jolts.sort();
+fn solution1(jolts: &[usize]) -> usize {
     let (one, three) = jolts.windows(2).fold((0, 0), |(one, three), pair| {
         let first = pair[0];
         let second = pair[1];
@@ -98,16 +157,129 @@ fn solution1(input: &str) -> usize {
             d => panic!(format!("unexpected diff: {} - {} = {}", second, first, d)),
         }
     });
-    dbg!(one, three);
-    // one+1 is because the outlet is 0 and not in the list.
-    // three+1 is because the device has a builtin adapter that is always 3 more jolts.
-    (one + 1) * (three + 1)
+    one * three
+}
+
+#[derive(Copy, Clone, PartialEq)]
+struct Node(usize);
+
+use std::fmt;
+impl fmt::Debug for Node {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Node({})", self.0)
+    }
+}
+
+#[derive(Debug)]
+struct Edge {
+    node: usize,
+    cost: usize,
+}
+
+// Based on code from https://www.geeksforgeeks.org/count-possible-paths-two-vertices/
+#[derive(Debug, Default)]
+struct Graph {
+    /// adj holds a
+    adj: Vec<Vec<Edge>>,
+    nodes: Vec<Node>,
+}
+
+impl Graph {
+    fn new(nodes: &[usize]) -> Graph {
+        let name_to_idx: HashMap<_, _> = nodes.iter().enumerate().map(|(i, n)| (n, i)).collect();
+        let nodes: Vec<_> = nodes.iter().map(|n| Node(*n)).collect();
+        let adj = nodes[..nodes.len()]
+            .iter()
+            .enumerate()
+            .map(|(i, cur)| {
+                nodes[i + 1..]
+                    .iter()
+                    .enumerate()
+                    .take_while(|(_, &t)| t.0 - cur.0 <= 3)
+                    .map(|(j, t)| Edge {
+                        node: (i + j + 1),
+                        cost: t.0 - cur.0,
+                    })
+                    .collect()
+            })
+            .collect();
+
+        Graph { adj, nodes }
+    }
+    fn print_adj(&self) {
+        for (cur, edges) in self.adj.iter().enumerate() {
+            print!("{:?}", self.nodes[cur]);
+            for (i, edge) in edges.iter().enumerate() {
+                print!(" -> {:?}[{}]", self.nodes[edge.node], edge.cost);
+            }
+            println!();
+        }
+    }
+
+    fn count_paths_part2(&self) -> usize {
+        self.adj
+            .iter()
+            .map(|adj| match adj.len() {
+                0 | 1 => 0,
+                2 => 2,
+                3 => 3,
+                c => panic!(format!("unexpected cost {}", c)),
+            })
+            .sum::<usize>()
+            + 1
+    }
+
+    fn count_paths(&self, src: usize, dst: usize) -> usize {
+        self.count_paths_rec(src, dst, 0)
+    }
+
+    fn count_paths_rec(&self, cur: usize, dst: usize, count: usize) -> usize {
+        if cur == dst {
+            count + 1
+        } else {
+            dbg!(cur, &self.adj[cur]);
+            self.adj[cur].iter().fold(count, |acc, n| {
+                assert!(cur < n.node);
+                self.count_paths_rec(n.node, dst, acc)
+            })
+        }
+    }
+}
+
+/*
+fn count_permutations(jolts: &[usize]) -> usize {
+for chunk in jolts.iter().windows(2) {
+if chunk[1] - chunk[0] > 3 {
+return false;
+}
+}
+true
+}
+*/
+
+#[aoc(day10, part2)]
+fn solution2(jolts: &[usize]) -> usize {
+    //   count_permutations(jolts)
+    // Store permutations at each node.
+    let mut paths = vec![1; jolts.len()];
+
+    dbg!(&paths);
+    jolts.iter().enumerate().skip(1).for_each(|(cur, jolt)| {
+        let p = (cur.saturating_sub(3)..cur)
+            .filter(|idx| (jolt - jolts[*idx]) <= 3)
+            .map(|idx| paths[idx])
+            .sum();
+        paths[cur] = p;
+    });
+    dbg!(&paths);
+    paths[paths.len() - 1]
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    // 1 4 5 6 7 10 11 12 15 16 19
     const INPUT1: &'static str = r#"16
 10
 15
@@ -119,6 +291,8 @@ mod tests {
 6
 12
 4"#;
+
+    // 1 2 3 4 7 8 9 10 11 14 17 18 19 20 23 24 25 31 32 33 34 35 38 39 42 45 46 47 48 49
     const INPUT2: &'static str = r#"28
 33
 18
@@ -150,10 +324,35 @@ mod tests {
 34
 10
 3"#;
+    #[test]
+    fn graph() {
+        let g = Graph {
+            adj: vec![
+                vec![
+                    Edge { node: 1, cost: 1 },
+                    Edge { node: 2, cost: 1 },
+                    Edge { node: 3, cost: 1 },
+                ],
+                vec![Edge { node: 3, cost: 1 }, Edge { node: 4, cost: 1 }],
+                vec![Edge { node: 3, cost: 1 }, Edge { node: 4, cost: 1 }],
+                vec![],
+                vec![],
+            ],
+            nodes: vec![0, 1, 2, 3, 4].iter().map(|i| Node(*i)).collect(),
+        };
+        dbg!(&g);
+        assert_eq!(g.count_paths(0, 3), 3);
+    }
 
     #[test]
     fn part1() {
-        assert_eq!(solution1(INPUT1), 7 * 5);
-        assert_eq!(solution1(INPUT2), 22 * 10);
+        assert_eq!(solution1(&parse(&INPUT1)), 7 * 5);
+        assert_eq!(solution1(&parse(&INPUT2)), 22 * 10);
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(solution2(&parse(&INPUT1)), 8);
+        assert_eq!(solution2(&parse(&INPUT2)), 19208);
     }
 }
