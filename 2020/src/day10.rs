@@ -131,8 +131,6 @@
 //!
 //! What is the total number of distinct ways you can arrange the adapters to connect the charging outlet to your device?
 
-use std::collections::HashMap;
-
 use aoc_runner_derive::{aoc, aoc_generator};
 
 #[aoc_generator(day10)]
@@ -160,110 +158,12 @@ fn solution1(jolts: &[usize]) -> usize {
     one * three
 }
 
-#[derive(Copy, Clone, PartialEq)]
-struct Node(usize);
-
-use std::fmt;
-impl fmt::Debug for Node {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Node({})", self.0)
-    }
-}
-
-#[derive(Debug)]
-struct Edge {
-    node: usize,
-    cost: usize,
-}
-
-// Based on code from https://www.geeksforgeeks.org/count-possible-paths-two-vertices/
-#[derive(Debug, Default)]
-struct Graph {
-    /// adj holds a
-    adj: Vec<Vec<Edge>>,
-    nodes: Vec<Node>,
-}
-
-impl Graph {
-    fn new(nodes: &[usize]) -> Graph {
-        let name_to_idx: HashMap<_, _> = nodes.iter().enumerate().map(|(i, n)| (n, i)).collect();
-        let nodes: Vec<_> = nodes.iter().map(|n| Node(*n)).collect();
-        let adj = nodes[..nodes.len()]
-            .iter()
-            .enumerate()
-            .map(|(i, cur)| {
-                nodes[i + 1..]
-                    .iter()
-                    .enumerate()
-                    .take_while(|(_, &t)| t.0 - cur.0 <= 3)
-                    .map(|(j, t)| Edge {
-                        node: (i + j + 1),
-                        cost: t.0 - cur.0,
-                    })
-                    .collect()
-            })
-            .collect();
-
-        Graph { adj, nodes }
-    }
-    fn print_adj(&self) {
-        for (cur, edges) in self.adj.iter().enumerate() {
-            print!("{:?}", self.nodes[cur]);
-            for (i, edge) in edges.iter().enumerate() {
-                print!(" -> {:?}[{}]", self.nodes[edge.node], edge.cost);
-            }
-            println!();
-        }
-    }
-
-    fn count_paths_part2(&self) -> usize {
-        self.adj
-            .iter()
-            .map(|adj| match adj.len() {
-                0 | 1 => 0,
-                2 => 2,
-                3 => 3,
-                c => panic!(format!("unexpected cost {}", c)),
-            })
-            .sum::<usize>()
-            + 1
-    }
-
-    fn count_paths(&self, src: usize, dst: usize) -> usize {
-        self.count_paths_rec(src, dst, 0)
-    }
-
-    fn count_paths_rec(&self, cur: usize, dst: usize, count: usize) -> usize {
-        if cur == dst {
-            count + 1
-        } else {
-            dbg!(cur, &self.adj[cur]);
-            self.adj[cur].iter().fold(count, |acc, n| {
-                assert!(cur < n.node);
-                self.count_paths_rec(n.node, dst, acc)
-            })
-        }
-    }
-}
-
-/*
-fn count_permutations(jolts: &[usize]) -> usize {
-for chunk in jolts.iter().windows(2) {
-if chunk[1] - chunk[0] > 3 {
-return false;
-}
-}
-true
-}
-*/
-
 #[aoc(day10, part2)]
 fn solution2(jolts: &[usize]) -> usize {
     //   count_permutations(jolts)
     // Store permutations at each node.
     let mut paths = vec![1; jolts.len()];
 
-    dbg!(&paths);
     jolts.iter().enumerate().skip(1).for_each(|(cur, jolt)| {
         let p = (cur.saturating_sub(3)..cur)
             .filter(|idx| (jolt - jolts[*idx]) <= 3)
@@ -271,7 +171,6 @@ fn solution2(jolts: &[usize]) -> usize {
             .sum();
         paths[cur] = p;
     });
-    dbg!(&paths);
     paths[paths.len() - 1]
 }
 
@@ -324,25 +223,6 @@ mod tests {
 34
 10
 3"#;
-    #[test]
-    fn graph() {
-        let g = Graph {
-            adj: vec![
-                vec![
-                    Edge { node: 1, cost: 1 },
-                    Edge { node: 2, cost: 1 },
-                    Edge { node: 3, cost: 1 },
-                ],
-                vec![Edge { node: 3, cost: 1 }, Edge { node: 4, cost: 1 }],
-                vec![Edge { node: 3, cost: 1 }, Edge { node: 4, cost: 1 }],
-                vec![],
-                vec![],
-            ],
-            nodes: vec![0, 1, 2, 3, 4].iter().map(|i| Node(*i)).collect(),
-        };
-        dbg!(&g);
-        assert_eq!(g.count_paths(0, 3), 3);
-    }
 
     #[test]
     fn part1() {
