@@ -111,8 +111,8 @@ struct Schedule {
     buses: Vec<u32>,
 }
 
-#[aoc_generator(day13)]
-fn parse(input: &str) -> Schedule {
+#[aoc_generator(day13, part1)]
+fn parse1(input: &str) -> Schedule {
     let mut it = input.split('\n');
     let time = it
         .next()
@@ -142,18 +142,81 @@ fn solution1(sch: &Schedule) -> u32 {
     bus * (next - sch.time)
 }
 
-#[aoc(day13, part2)]
-fn solution2(sch: &Schedule) -> u32 {
-    dbg!(&sch);
-    let (bus, next) = sch
-        .buses
+#[derive(Copy, Clone, Debug)]
+struct Departure {
+    bus: usize,
+    delay: usize,
+}
+
+#[aoc_generator(day13, part2)]
+fn parse2(input: &str) -> Vec<Departure> {
+    let mut it = input.split('\n');
+    let _ = it.next().expect("Premature EOF");
+    it.next()
+        .expect("Premature EOF")
+        .split(',')
+        .enumerate()
+        .filter_map(|(i, s)| Some((i, s.parse::<usize>().ok()?)))
+        .map(|(delay, bus)| Departure { bus, delay })
+        .collect()
+}
+
+fn solution2_correct_but_too_slow(sch: &[Departure]) -> usize {
+    // Shitty brute force to explore the problem space.
+    let f = sch[0];
+    for x in 2.. {
+        let t = f.bus * x;
+        if sch[1..].iter().all(|d| (d.bus - (t % d.bus)) == d.delay) {
+            return t;
+        }
+    }
+    unreachable!()
+}
+
+fn inv_mod(a: usize, m: usize) -> usize {
+    {
+        let a = a % m;
+        for i in 1..m {
+            if (a * i) % m == 1 {
+                return i;
+            }
+        }
+    }
+    panic!(format!("no inverse modulo found for {}^-1 % {}", a, m));
+}
+
+/// Based on http://homepages.math.uic.edu/~leon/mcs425-s08/handouts/chinese_remainder.pdf
+fn chinese_remainder(a_m: Vec<(usize, usize)>) -> usize {
+    let a: Vec<_> = a_m.iter().map(|(a, _m)| a).collect();
+    let m: Vec<_> = a_m.iter().map(|(_a, m)| m).collect();
+    let m_all = m.iter().fold(1, |acc, m| *m * acc);
+    let z: Vec<_> = m.iter().map(|m| m_all / *m).collect();
+    let y: Vec<_> = m
         .iter()
-        // Find the next bus time after sch.time.
-        .map(|b| (b, b * ((sch.time / b) + 1)))
-        // Find the earliest next bus time.
-        .min_by(|i1, i2| i1.1.cmp(&i2.1))
-        .unwrap();
-    bus * (next - sch.time)
+        .zip(z.iter())
+        .map(|(m, z)| inv_mod(*z, **m))
+        .collect();
+    let w: Vec<_> = y
+        .iter()
+        .zip(z.iter())
+        .map(|(y, z)| (*y * *z) % m_all)
+        .collect();
+
+    dbg!(&a, &m, &m_all, &z, &y, &w);
+
+    let x = a
+        .iter()
+        .zip(w.iter())
+        .fold(0, |acc, (a, w)| acc + (*a * *w));
+    dbg!(&x);
+
+    dbg!(x % m_all)
+}
+
+#[aoc(day13, part2)]
+fn solution2(sch: &[Departure]) -> usize {
+    let a_m: Vec<(_, _)> = sch.iter().map(|d| (d.delay, d.bus)).collect();
+    chinese_remainder(a_m)
 }
 
 #[cfg(test)]
@@ -164,9 +227,9 @@ mod tests {
 7,13,x,x,59,x,31,19"#;
 
     #[test]
-    fn parsing() {
+    fn parsing1() {
         assert_eq!(
-            parse(INPUT),
+            parse1(INPUT),
             Schedule {
                 time: 939,
                 buses: vec![7, 13, 59, 31, 19],
@@ -176,10 +239,52 @@ mod tests {
 
     #[test]
     fn part1() {
-        assert_eq!(solution1(&parse(INPUT)), 295);
+        assert_eq!(solution1(&parse1(INPUT)), 295);
     }
     #[test]
     fn part2() {
-        assert_eq!(solution2(&parse(INPUT)), 1068781);
+        for (input, want) in vec![
+            ("7,13,x,x,59,x,31,19", 1068781),
+            ("17,x,13,19", 3417),
+            ("67,7,59,61", 754018),
+            ("67,x,7,59,61", 779210),
+            ("67,7,x,59,61", 1261476),
+            ("1789,37,47,1889", 1202161486),
+        ] {
+            // Insert fake header '123\n' to make the parse2 function happy.
+            assert_eq!(solution2(&parse2(&format!("123\n{}", input))), want);
+        }
+    }
+
+    #[test]
+    fn inverse_modulo() {
+        assert_eq!(inv_mod(8400, 11), 8);
+        assert_eq!(inv_mod(7, 11), 8);
+        assert_eq!(inv_mod(5775, 16), 15);
+        assert_eq!(inv_mod(15, 16), 15);
+        assert_eq!(inv_mod(4400, 21), 2);
+        assert_eq!(inv_mod(11, 21), 2);
+        assert_eq!(inv_mod(3696, 25), 6);
+        assert_eq!(inv_mod(21, 25), 6);
+        assert_eq!(inv_mod(243257, 11), 4);
+        assert_eq!(inv_mod(3, 11), 4);
+        assert_eq!(inv_mod(243257, 13), 1);
+    }
+
+    #[test]
+    fn chinese_remainder_theorem() {
+        assert_eq!(chinese_remainder(vec![(2, 5), (3, 7)]), 17);
+        assert_eq!(chinese_remainder(vec![(1, 3), (4, 5), (6, 7)]), 34);
+        assert_eq!(chinese_remainder(vec![(3, 5), (2, 6), (4, 7)]), 158);
+        assert_eq!(
+            chinese_remainder(vec![(1, 5), (2, 7), (3, 9), (4, 11)]),
+            1731
+        );
+        // http://homepages.math.uic.edu/~leon/mcs425-s08/handouts/chinese_remainder.pdf
+        // says this answer is 51669 which doesn't check out.
+        assert_eq!(
+            chinese_remainder(vec![(6, 11), (13, 16), (9, 21), (19, 25),]),
+            89469
+        );
     }
 }
