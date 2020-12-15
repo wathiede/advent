@@ -35,13 +35,61 @@
 //! To initialize your ferry's docking program, you need the sum of all values left in memory after the initialization program completes. (The entire 36-bit address space begins initialized to the value 0 at every address.) In the above example, only two values in memory are not zero - 101 (at address 7) and 64 (at address 8) - producing a sum of 165.
 //!
 //! Execute the initialization program. What is the sum of all values left in memory after it completes?
+//!
+//! --- Part Two ---
+//! For some reason, the sea port's computer system still can't communicate with your ferry's docking program. It must be using version 2 of the decoder chip!
+//!
+//! A version 2 decoder chip doesn't modify the values being written at all. Instead, it acts as a memory address decoder. Immediately before a value is written to memory, each bit in the bitmask modifies the corresponding bit of the destination memory address in the following way:
+//!
+//! If the bitmask bit is 0, the corresponding memory address bit is unchanged.
+//! If the bitmask bit is 1, the corresponding memory address bit is overwritten with 1.
+//! If the bitmask bit is X, the corresponding memory address bit is floating.
+//! A floating bit is not connected to anything and instead fluctuates unpredictably. In practice, this means the floating bits will take on all possible values, potentially causing many memory addresses to be written all at once!
+//!
+//! For example, consider the following program:
+//!
+//! mask = 000000000000000000000000000000X1001X
+//! mem[42] = 100
+//! mask = 00000000000000000000000000000000X0XX
+//! mem[26] = 1
+//! When this program goes to write to memory address 42, it first applies the bitmask:
+//!
+//! address: 000000000000000000000000000000101010  (decimal 42)
+//! mask:    000000000000000000000000000000X1001X
+//! result:  000000000000000000000000000000X1101X
+//! After applying the mask, four bits are overwritten, three of which are different, and two of which are floating. Floating bits take on every possible combination of values; with two floating bits, four actual memory addresses are written:
+//!
+//! 000000000000000000000000000000011010  (decimal 26)
+//! 000000000000000000000000000000011011  (decimal 27)
+//! 000000000000000000000000000000111010  (decimal 58)
+//! 000000000000000000000000000000111011  (decimal 59)
+//! Next, the program is about to write to memory address 26 with a different bitmask:
+//!
+//! address: 000000000000000000000000000000011010  (decimal 26)
+//! mask:    00000000000000000000000000000000X0XX
+//! result:  00000000000000000000000000000001X0XX
+//! This results in an address with three floating bits, causing writes to eight memory addresses:
+//!
+//! 000000000000000000000000000000010000  (decimal 16)
+//! 000000000000000000000000000000010001  (decimal 17)
+//! 000000000000000000000000000000010010  (decimal 18)
+//! 000000000000000000000000000000010011  (decimal 19)
+//! 000000000000000000000000000000011000  (decimal 24)
+//! 000000000000000000000000000000011001  (decimal 25)
+//! 000000000000000000000000000000011010  (decimal 26)
+//! 000000000000000000000000000000011011  (decimal 27)
+//! The entire 36-bit address space still begins initialized to the value 0 at every address, and you still need the sum of all values left in memory at the end of the program. In this example, the sum is 208.
+//!
+//! Execute the initialization program using an emulator for a version 2 decoder chip. What is the sum of all values left in memory after it completes?
 
 use std::collections::HashMap;
 use std::str::FromStr;
 
 use aoc_runner_derive::aoc;
 
-#[derive(Default, Debug)]
+// Machine bit width.
+const BIT_WITDH: u8 = 36;
+#[derive(Default)]
 struct Mask {
     mask: usize,
     value: usize,
@@ -76,6 +124,28 @@ impl FromStr for Mask {
 impl Mask {
     fn apply(&self, v: usize) -> usize {
         v & self.mask | self.value
+    }
+
+    // TODO(wathiede): make this an Iterator?
+    fn decode(&self, v: usize) -> Vec<usize> {
+        // Add decoded value with all floaters set to zero.
+        let mut res = vec![(v | self.value) & !self.mask];
+        for bit in 0..BIT_WITDH {
+            let set = self.mask & (1 << bit);
+            if set > 0 {
+                // Floater
+                let ext: Vec<_> = res.iter().map(|v| v | set).collect();
+                res.extend(ext);
+            }
+        }
+        res
+    }
+}
+
+use std::fmt;
+impl fmt::Debug for Mask {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "mask: {:036b} value {:036b}", self.mask, self.value)
     }
 }
 
@@ -117,17 +187,58 @@ fn solution1(input: &str) -> usize {
     mem.values().fold(0, |acc, v| acc + v)
 }
 
+#[aoc(day14, part2)]
+fn solution2(input: &str) -> usize {
+    let mut mem: HashMap<usize, usize> = HashMap::new();
+    let mut mask = Mask::default();
+
+    input.split('\n').for_each(|l| {
+        let (cmd, arg) = l.split_at(l.find(" = ").expect("Couldn't find space wrapped ="));
+        let arg = &arg[3..];
+        match cmd {
+            "mask" => mask = arg.parse().expect("Couldn't parse mask"),
+            _ => {
+                let addr: Address = cmd.parse().expect("Couldn't parse address");
+                let val = arg.parse().expect("Couldn't pass arg");
+                for dec_addr in mask.decode(addr.0) {
+                    mem.insert(dec_addr, val);
+                }
+            }
+        };
+    });
+
+    mem.values().fold(0, |acc, v| acc + v)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    const INPUT: &'static str = r#"mask = XXXXXXXXXXXXXXXXXXXXXXXXXXXXX1XXXX0X
+    const INPUT1: &'static str = r#"mask = XXXXXXXXXXXXXXXXXXXXXXXXXXXXX1XXXX0X
 mem[8] = 11
 mem[7] = 101
 mem[8] = 0"#;
 
     #[test]
     fn test_solution1() {
-        assert_eq!(solution1(INPUT), 165);
+        assert_eq!(solution1(INPUT1), 165);
+    }
+    const INPUT2: &'static str = r#"mask = 000000000000000000000000000000X1001X
+mem[42] = 100
+mask = 00000000000000000000000000000000X0XX
+mem[26] = 1"#;
+
+    #[test]
+    fn test_solution2() {
+        assert_eq!(solution2(INPUT2), 208);
+    }
+
+    #[test]
+    fn mask_decode() {
+        let m: Mask = "000000000000000000000000000000X1001X".parse().unwrap();
+        assert_eq!(m.decode(42), vec![26, 27, 58, 59]);
+        let m: Mask = "00000000000000000000000000000000X0XX".parse().unwrap();
+        assert_eq!(m.decode(26), vec![16, 17, 18, 19, 24, 25, 26, 27]);
+        assert!(false);
     }
 }
