@@ -239,6 +239,5 @@ mem[26] = 1"#;
         assert_eq!(m.decode(42), vec![26, 27, 58, 59]);
         let m: Mask = "00000000000000000000000000000000X0XX".parse().unwrap();
         assert_eq!(m.decode(26), vec![16, 17, 18, 19, 24, 25, 26, 27]);
-        assert!(false);
     }
 }
