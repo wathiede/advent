@@ -130,7 +130,6 @@ fn parse1(input: &str) -> Schedule {
 
 #[aoc(day13, part1)]
 fn solution1(sch: &Schedule) -> u32 {
-    dbg!(&sch);
     let (bus, next) = sch
         .buses
         .iter()
@@ -161,18 +160,6 @@ fn parse2(input: &str) -> Vec<Departure> {
         .collect()
 }
 
-fn solution2_correct_but_too_slow(sch: &[Departure]) -> usize {
-    // Shitty brute force to explore the problem space.
-    let f = sch[0];
-    for x in 2.. {
-        let t = f.bus * x;
-        if sch[1..].iter().all(|d| (d.bus - (t % d.bus)) == d.delay) {
-            return t;
-        }
-    }
-    unreachable!()
-}
-
 fn inv_mod(a: usize, m: usize) -> usize {
     {
         let a = a % m;
@@ -186,6 +173,8 @@ fn inv_mod(a: usize, m: usize) -> usize {
 }
 
 /// Based on http://homepages.math.uic.edu/~leon/mcs425-s08/handouts/chinese_remainder.pdf
+/// a_m is a Vec with (a, m) as used in the above PDF. m are pairwise relatively prime positive
+/// integers and a are any integers.
 fn chinese_remainder(a_m: Vec<(usize, usize)>) -> usize {
     let a: Vec<_> = a_m.iter().map(|(a, _m)| a).collect();
     let m: Vec<_> = a_m.iter().map(|(_a, m)| m).collect();
@@ -202,20 +191,16 @@ fn chinese_remainder(a_m: Vec<(usize, usize)>) -> usize {
         .map(|(y, z)| (*y * *z) % m_all)
         .collect();
 
-    dbg!(&a, &m, &m_all, &z, &y, &w);
-
     let x = a
         .iter()
         .zip(w.iter())
         .fold(0, |acc, (a, w)| acc + (*a * *w));
-    dbg!(&x);
-
-    dbg!(x % m_all)
+    x % m_all
 }
 
 #[aoc(day13, part2)]
 fn solution2(sch: &[Departure]) -> usize {
-    let a_m: Vec<(_, _)> = sch.iter().map(|d| (d.delay, d.bus)).collect();
+    let a_m: Vec<(_, _)> = sch.iter().map(|d| (d.bus - d.delay, d.bus)).collect();
     chinese_remainder(a_m)
 }
 
@@ -244,10 +229,10 @@ mod tests {
     #[test]
     fn part2() {
         for (input, want) in vec![
-            ("7,13,x,x,59,x,31,19", 1068781),
             ("17,x,13,19", 3417),
             ("67,7,59,61", 754018),
             ("67,x,7,59,61", 779210),
+            ("7,13,x,x,59,x,31,19", 1068781),
             ("67,7,x,59,61", 1261476),
             ("1789,37,47,1889", 1202161486),
         ] {
