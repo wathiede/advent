@@ -34,17 +34,31 @@
 //! Given the starting numbers 3,2,1, the 2020th number spoken is 438.
 //! Given the starting numbers 3,1,2, the 2020th number spoken is 1836.
 //! Given your starting numbers, what will be the 2020th number spoken?
+//!
+//! --- Part Two ---
+//! Impressed, the Elves issue you a challenge: determine the 30000000th number spoken. For example, given the same starting numbers as above:
+//!
+//! Given 0,3,6, the 30000000th number spoken is 175594.
+//! Given 1,3,2, the 30000000th number spoken is 2578.
+//! Given 2,1,3, the 30000000th number spoken is 3544142.
+//! Given 1,2,3, the 30000000th number spoken is 261214.
+//! Given 2,3,1, the 30000000th number spoken is 6895259.
+//! Given 3,2,1, the 30000000th number spoken is 18.
+//! Given 3,1,2, the 30000000th number spoken is 362.
+//! Given your starting numbers, what will be the 30000000th number spoken?
 
 use aoc_runner_derive::aoc;
+
 #[aoc(day15, part1)]
 fn solution1(input: &str) -> usize {
-    let mut history = Vec::with_capacity(2020);
+    const ANSWER_IDX: usize = 2020;
+    let mut history = Vec::with_capacity(ANSWER_IDX);
     input
         .split(',')
         .map(|s| s.parse().expect("couldn't parse number"))
         .for_each(|n| history.push(n));
     let mut last = history[history.len() - 1];
-    (history.len()..2020).for_each(|i| {
+    (history.len()..ANSWER_IDX).for_each(|i| {
         // Search backwards for the last number seen. If it's not found, we append 0 to history.
         // If it's found, we append the distance.
         let next = match history[..i - 1]
@@ -61,12 +75,52 @@ fn solution1(input: &str) -> usize {
         history.push(next);
         last = next;
     });
-    history[2019]
+    history[ANSWER_IDX - 1]
+}
+
+#[aoc(day15, part2)]
+fn solution2(input: &str) -> usize {
+    const ANSWER_IDX: usize = 30000000;
+    solution2_impl(input, ANSWER_IDX)
+}
+
+use std::collections::HashMap;
+fn solution2_impl(input: &str, idx: usize) -> usize {
+    dbg!(&input, idx);
+    let starter: Vec<_> = input
+        .split(',')
+        .map(|s| s.parse().expect("couldn't parse number"))
+        .collect();
+
+    let mut history: HashMap<usize, usize> = starter
+        .into_iter()
+        .enumerate()
+        .map(|(i, n)| (n, i))
+        .collect();
+
+    let mut last = 0;
+    let mut spoken = 0;
+    (history.len()..idx).for_each(|i| {
+        match history.get_mut(&spoken) {
+            Some(entry) => {
+                last = spoken;
+                spoken = i - *entry;
+                *entry = i;
+            }
+            None => {
+                last = spoken;
+                history.insert(spoken, i);
+                spoken = 0;
+            }
+        };
+    });
+    last
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn test_solution1() {
         for (input, want) in vec![
@@ -78,6 +132,36 @@ mod tests {
             ("3,1,2", 1836),
         ] {
             assert_eq!(solution1(input), want);
+        }
+    }
+
+    #[test]
+    fn test_solution2_impl() {
+        for (input, want) in vec![
+            ("0,3,6", 436),
+            ("1,3,2", 1),
+            ("2,1,3", 10),
+            ("1,2,3", 27),
+            ("2,3,1", 78),
+            ("3,2,1", 438),
+            ("3,1,2", 1836),
+        ] {
+            assert_eq!(solution2_impl(input, 2020), want);
+        }
+    }
+
+    //#[test]
+    fn test_solution2() {
+        for (input, want) in vec![
+            //("0,3,6", 175594),
+            ("1,3,2", 2578),
+            ("2,1,3", 3544142),
+            ("1,2,3", 261214),
+            ("2,3,1", 6895259),
+            ("3,2,1", 18),
+            ("3,1,2", 362),
+        ] {
+            assert_eq!(solution2(input), want);
         }
     }
 }
