@@ -86,7 +86,6 @@ fn solution2(input: &str) -> usize {
 
 use std::collections::HashMap;
 fn solution2_impl(input: &str, idx: usize) -> usize {
-    dbg!(&input, idx);
     let starter: Vec<_> = input
         .split(',')
         .map(|s| s.parse().expect("couldn't parse number"))
