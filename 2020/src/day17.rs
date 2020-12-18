@@ -140,6 +140,255 @@
 //!
 //! Starting with your given initial configuration, simulate six cycles. How many cubes are left in the active state after the sixth cycle?
 
+//! --- Part Two ---
+//! For some reason, your simulated results don't match what the experimental energy source engineers expected. Apparently, the pocket dimension actually has four spatial dimensions, not three.
+//!
+//! The pocket dimension contains an infinite 4-dimensional grid. At every integer 4-dimensional coordinate (x,y,z,w), there exists a single cube (really, a hypercube) which is still either active or inactive.
+//!
+//! Each cube only ever considers its neighbors: any of the 80 other cubes where any of their coordinates differ by at most 1. For example, given the cube at x=1,y=2,z=3,w=4, its neighbors include the cube at x=2,y=2,z=3,w=3, the cube at x=0,y=2,z=3,w=4, and so on.
+//!
+//! The initial state of the pocket dimension still consists of a small flat region of cubes. Furthermore, the same rules for cycle updating still apply: during each cycle, consider the number of active neighbors of each cube.
+//!
+//! For example, consider the same initial state as in the example above. Even though the pocket dimension is 4-dimensional, this initial state represents a small 2-dimensional slice of it. (In particular, this initial state defines a 3x3x1x1 region of the 4-dimensional space.)
+//!
+//! Simulating a few cycles from this initial state produces the following configurations, where the result of each cycle is shown layer-by-layer at each given z and w coordinate:
+//!
+//! Before any cycles:
+//!
+//! z=0, w=0
+//! .#.
+//! ..#
+//! ###
+//!
+//!
+//! After 1 cycle:
+//!
+//! z=-1, w=-1
+//! #..
+//! ..#
+//! .#.
+//!
+//! z=0, w=-1
+//! #..
+//! ..#
+//! .#.
+//!
+//! z=1, w=-1
+//! #..
+//! ..#
+//! .#.
+//!
+//! z=-1, w=0
+//! #..
+//! ..#
+//! .#.
+//!
+//! z=0, w=0
+//! #.#
+//! .##
+//! .#.
+//!
+//! z=1, w=0
+//! #..
+//! ..#
+//! .#.
+//!
+//! z=-1, w=1
+//! #..
+//! ..#
+//! .#.
+//!
+//! z=0, w=1
+//! #..
+//! ..#
+//! .#.
+//!
+//! z=1, w=1
+//! #..
+//! ..#
+//! .#.
+//!
+//!
+//! After 2 cycles:
+//!
+//! z=-2, w=-2
+//! .....
+//! .....
+//! ..#..
+//! .....
+//! .....
+//!
+//! z=-1, w=-2
+//! .....
+//! .....
+//! .....
+//! .....
+//! .....
+//!
+//! z=0, w=-2
+//! ###..
+//! ##.##
+//! #...#
+//! .#..#
+//! .###.
+//!
+//! z=1, w=-2
+//! .....
+//! .....
+//! .....
+//! .....
+//! .....
+//!
+//! z=2, w=-2
+//! .....
+//! .....
+//! ..#..
+//! .....
+//! .....
+//!
+//! z=-2, w=-1
+//! .....
+//! .....
+//! .....
+//! .....
+//! .....
+//!
+//! z=-1, w=-1
+//! .....
+//! .....
+//! .....
+//! .....
+//! .....
+//!
+//! z=0, w=-1
+//! .....
+//! .....
+//! .....
+//! .....
+//! .....
+//!
+//! z=1, w=-1
+//! .....
+//! .....
+//! .....
+//! .....
+//! .....
+//!
+//! z=2, w=-1
+//! .....
+//! .....
+//! .....
+//! .....
+//! .....
+//!
+//! z=-2, w=0
+//! ###..
+//! ##.##
+//! #...#
+//! .#..#
+//! .###.
+//!
+//! z=-1, w=0
+//! .....
+//! .....
+//! .....
+//! .....
+//! .....
+//!
+//! z=0, w=0
+//! .....
+//! .....
+//! .....
+//! .....
+//! .....
+//!
+//! z=1, w=0
+//! .....
+//! .....
+//! .....
+//! .....
+//! .....
+//!
+//! z=2, w=0
+//! ###..
+//! ##.##
+//! #...#
+//! .#..#
+//! .###.
+//!
+//! z=-2, w=1
+//! .....
+//! .....
+//! .....
+//! .....
+//! .....
+//!
+//! z=-1, w=1
+//! .....
+//! .....
+//! .....
+//! .....
+//! .....
+//!
+//! z=0, w=1
+//! .....
+//! .....
+//! .....
+//! .....
+//! .....
+//!
+//! z=1, w=1
+//! .....
+//! .....
+//! .....
+//! .....
+//! .....
+//!
+//! z=2, w=1
+//! .....
+//! .....
+//! .....
+//! .....
+//! .....
+//!
+//! z=-2, w=2
+//! .....
+//! .....
+//! ..#..
+//! .....
+//! .....
+//!
+//! z=-1, w=2
+//! .....
+//! .....
+//! .....
+//! .....
+//! .....
+//!
+//! z=0, w=2
+//! ###..
+//! ##.##
+//! #...#
+//! .#..#
+//! .###.
+//!
+//! z=1, w=2
+//! .....
+//! .....
+//! .....
+//! .....
+//! .....
+//!
+//! z=2, w=2
+//! .....
+//! .....
+//! ..#..
+//! .....
+//! .....
+//! After the full six-cycle boot process completes, 848 cubes are left in the active state.
+//!
+//! Starting with your given initial configuration, simulate six cycles in a 4-dimensional space. How many cubes are left in the active state after the sixth cycle?
+
 use std::fmt;
 
 use aoc_runner_derive::{aoc, aoc_generator};
@@ -164,86 +413,112 @@ impl fmt::Debug for Cube {
 }
 
 #[derive(Default, Clone)]
-struct ThreeSpace<T> {
+struct Universe<T> {
     cells: Vec<T>,
     x_len: usize,
     y_len: usize,
     z_len: usize,
+    w_len: usize,
     default: T,
 }
 
-impl<T> ThreeSpace<T> {
+impl<T> Universe<T> {
     fn dimensions(&self) -> String {
         let u = &self;
-        format!("{}x{}x{}", u.x_len, u.y_len, u.z_len)
+        format!("{}x{}x{}x{}", u.x_len, u.y_len, u.z_len, u.w_len)
     }
 }
 
-impl<T> fmt::Debug for ThreeSpace<T>
+impl<T> fmt::Debug for Universe<T>
 where
     T: fmt::Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}\n", self.dimensions())?;
         let u = &self;
-        for z in 0..u.z_len {
+        for w in 0..u.w_len {
+            for z in 0..u.z_len {
+                let hdr = format!(
+                    "z={}, w={}",
+                    z as isize - u.z_len as isize / 2,
+                    w as isize - u.w_len as isize / 2
+                );
+                write!(f, "{:width$} | ", hdr, width = u.x_len)?;
+            }
+            write!(f, "\n")?;
             for y in 0..u.y_len {
-                for x in 0..u.x_len {
-                    write!(f, "{:?}", u[(x, y, z)])?;
+                for z in 0..u.z_len {
+                    for x in 0..u.x_len {
+                        write!(f, "{:?}", u[(x, y, z, w)])?;
+                    }
+                    write!(f, " | ")?;
                 }
                 write!(f, "\n")?;
             }
             write!(f, "\n")?;
         }
+        write!(f, "\n")?;
         Ok(())
     }
 }
+
 use std::ops::{Index, IndexMut};
-impl<T> IndexMut<(usize, usize, usize)> for ThreeSpace<T> {
-    fn index_mut(&mut self, (x, y, z): (usize, usize, usize)) -> &mut Self::Output {
-        if x >= self.x_len || y >= self.y_len || z > self.z_len {
-            panic!(format!("index_mut outside of bounds ({},{},{})", x, y, z));
+
+impl<T> IndexMut<(usize, usize, usize, usize)> for Universe<T> {
+    fn index_mut(&mut self, (x, y, z, w): (usize, usize, usize, usize)) -> &mut Self::Output {
+        if x >= self.x_len || y >= self.y_len || z > self.z_len || w > self.w_len {
+            panic!(format!(
+                "index_mut outside of bounds ({},{},{},{})",
+                x, y, z, w
+            ));
         }
-        &mut self.cells[x + y * self.y_len + z * self.x_len * self.y_len]
+        &mut self.cells[x
+            + y * self.y_len
+            + z * self.x_len * self.y_len
+            + w * self.x_len * self.y_len * self.z_len]
     }
 }
 
-impl<T> Index<(usize, usize, usize)> for ThreeSpace<T> {
+impl<T> Index<(usize, usize, usize, usize)> for Universe<T> {
     type Output = T;
 
-    /// Returns the value in 3-space given by x,y,z.  Values outside the active space this ThreeSpace covers will return the default for T;
-    fn index(&self, (x, y, z): (usize, usize, usize)) -> &Self::Output {
-        if x >= self.x_len || y >= self.y_len || z > self.z_len {
+    /// Returns the value in 4-space given by x,y,z,w.  Values outside the active space this Universe covers will return the default for T;
+    fn index(&self, (x, y, z, w): (usize, usize, usize, usize)) -> &Self::Output {
+        if x >= self.x_len || y >= self.y_len || z > self.z_len || w > self.w_len {
             return &self.default;
         }
-        &self.cells[x + y * self.y_len + z * self.x_len * self.y_len]
+        &self.cells[x
+            + y * self.y_len
+            + z * self.x_len * self.y_len
+            + w * self.x_len * self.y_len * self.z_len]
     }
 }
 
-impl<T> Index<(isize, isize, isize)> for ThreeSpace<T> {
+impl<T> Index<(isize, isize, isize, isize)> for Universe<T> {
     type Output = T;
 
-    /// Returns the value in 3-space given by x,y,z.  Values outside the active space this ThreeSpace covers will return self.default;
-    fn index(&self, (x, y, z): (isize, isize, isize)) -> &Self::Output {
-        if x < 0 || y < 0 || z < 0 {
+    /// Returns the value in 4-space given by x,y,z,w.  Values outside the active space this Universe covers will return self.default;
+    fn index(&self, (x, y, z, w): (isize, isize, isize, isize)) -> &Self::Output {
+        if x < 0 || y < 0 || z < 0 || w < 0 {
             return &self.default;
         }
 
         let x_len = self.x_len as isize;
         let y_len = self.y_len as isize;
         let z_len = self.z_len as isize;
+        let w_len = self.w_len as isize;
 
-        if x >= x_len || y >= y_len || z >= z_len {
+        if x >= x_len || y >= y_len || z >= z_len || w >= w_len {
             return &self.default;
         }
 
-        &self.cells[(x + y * y_len + z * x_len * y_len) as usize]
+        &self.cells[(x + y * y_len + z * x_len * y_len + w * x_len * y_len * z_len) as usize]
     }
 }
 
 #[derive(Clone)]
 struct PocketDimension {
-    universe: ThreeSpace<Cube>,
+    universe: Universe<Cube>,
 }
 
 impl std::str::FromStr for PocketDimension {
@@ -268,11 +543,12 @@ impl std::str::FromStr for PocketDimension {
                 }));
             });
         });
-        let universe = ThreeSpace {
+        let universe = Universe {
             cells,
             x_len,
             y_len,
             z_len,
+            w_len: 1,
             default: Cube::Inactive,
         };
 
@@ -289,50 +565,69 @@ impl fmt::Debug for PocketDimension {
 impl PocketDimension {
     /// Applies the rules of the puzzle one iteration and returns a new PocketDimension
     /// representing the new state.
-    fn step(&self) -> PocketDimension {
+    fn step(&self, expand_w: bool) -> PocketDimension {
         let u = &self.universe;
         let x_len = u.x_len as isize;
         let y_len = u.y_len as isize;
         let z_len = u.z_len as isize;
-        let mut counts = ThreeSpace::<usize> {
+        let w_len = u.w_len as isize;
+
+        let (new_w_len, w_range, w_off) = if expand_w {
+            (u.w_len + 2, -1..w_len + 1, 1)
+        } else {
+            (u.w_len, 0..w_len, 0)
+        };
+
+        let mut counts = Universe::<usize> {
             x_len: u.x_len + 2,
             y_len: u.y_len + 2,
             z_len: u.z_len + 2,
-            cells: vec![0; (u.x_len + 2) * (u.y_len + 2) * (u.z_len + 2)],
+            w_len: new_w_len,
+            cells: vec![0; (u.x_len + 2) * (u.y_len + 2) * (u.z_len + 2) * (new_w_len)],
             default: 0,
         };
-        let mut universe = ThreeSpace::<Cube> {
+        let mut universe = Universe::<Cube> {
             x_len: u.x_len + 2,
             y_len: u.y_len + 2,
             z_len: u.z_len + 2,
-            cells: vec![Cube::Inactive; (u.x_len + 2) * (u.y_len + 2) * (u.z_len + 2)],
+            w_len: new_w_len,
+            cells: vec![
+                Cube::Inactive;
+                (u.x_len + 2) * (u.y_len + 2) * (u.z_len + 2) * (new_w_len)
+            ],
             default: Cube::Inactive,
         };
-        for z in -1..z_len + 1 {
-            for y in -1..y_len + 1 {
-                for x in -1..x_len + 1 {
-                    let adj = self.adjacency((x, y, z));
-                    counts[((x + 1) as usize, (y + 1) as usize, (z + 1) as usize)] = adj;
-                    match self.universe[(x, y, z)] {
-                        Cube::Active => {
-                            if adj == 2 || adj == 3 {
-                                universe[((x + 1) as usize, (y + 1) as usize, (z + 1) as usize)] =
-                                    Cube::Active;
-                            } else {
-                                universe[((x + 1) as usize, (y + 1) as usize, (z + 1) as usize)] =
-                                    Cube::Inactive;
+        for w in w_range {
+            for z in -1..z_len + 1 {
+                for y in -1..y_len + 1 {
+                    for x in -1..x_len + 1 {
+                        let adj = self.adjacency((x, y, z, w));
+                        let dst = (
+                            (x + 1) as usize,
+                            (y + 1) as usize,
+                            (z + 1) as usize,
+                            (w + w_off) as usize,
+                        );
+                        counts[dst] = adj;
+                        match self.universe[(x, y, z, w)] {
+                            Cube::Active => {
+                                if adj == 2 || adj == 3 {
+                                    universe[dst] = Cube::Active;
+                                } else {
+                                    universe[dst] = Cube::Inactive;
+                                }
                             }
-                        }
-                        Cube::Inactive => {
-                            if adj == 3 {
-                                universe[((x + 1) as usize, (y + 1) as usize, (z + 1) as usize)] =
-                                    Cube::Active;
+                            Cube::Inactive => {
+                                if adj == 3 {
+                                    universe[dst] = Cube::Active;
+                                }
                             }
-                        }
-                    };
+                        };
+                    }
                 }
             }
         }
+        //dbg!(&counts, &universe);
         PocketDimension { universe }
     }
     fn active(&self) -> usize {
@@ -343,17 +638,21 @@ impl PocketDimension {
             .count()
     }
     /// Counts active neighbors.
-    fn adjacency(&self, (x, y, z): (isize, isize, isize)) -> usize {
+    fn adjacency(&self, (x, y, z, w): (isize, isize, isize, isize)) -> usize {
         let mut sum = 0;
-        for z_off in -1..=1 {
-            for y_off in -1..=1 {
-                for x_off in -1..=1 {
-                    if x_off == 0 && y_off == 0 && z_off == 0 {
-                        // Skip the requested cell
-                        continue;
-                    }
-                    if self.universe[(x + x_off, y + y_off, z + z_off)] == Cube::Active {
-                        sum += 1;
+        for w_off in -1..=1 {
+            for z_off in -1..=1 {
+                for y_off in -1..=1 {
+                    for x_off in -1..=1 {
+                        if x_off == 0 && y_off == 0 && z_off == 0 && w_off == 0 {
+                            // Skip the requested cell
+                            continue;
+                        }
+                        if self.universe[(x + x_off, y + y_off, z + z_off, w + w_off)]
+                            == Cube::Active
+                        {
+                            sum += 1;
+                        }
                     }
                 }
             }
@@ -369,7 +668,12 @@ fn generator(input: &str) -> PocketDimension {
 
 #[aoc(day17, part1)]
 fn solution1(pd: &PocketDimension) -> usize {
-    (0..6).fold(pd.clone(), |acc, _| acc.step()).active()
+    (0..6).fold(pd.clone(), |acc, _| acc.step(false)).active()
+}
+
+#[aoc(day17, part2)]
+fn solution2(pd: &PocketDimension) -> usize {
+    (0..6).fold(pd.clone(), |acc, _| acc.step(true)).active()
 }
 
 #[cfg(test)]
@@ -473,7 +777,7 @@ mod tests {
         for (idx, ((input, active), dimensions)) in STEPS1
             .split("\n\n\n")
             .zip(vec![5, 11, 21, 38])
-            .zip(vec!["3x3x1", "3x3x3", "5x5x5", "7x7x5"])
+            .zip(vec!["3x3x1x1", "3x3x3x1", "5x5x5x1", "7x7x5x1"])
             .enumerate()
         {
             let pd = generator(input);
@@ -491,5 +795,19 @@ mod tests {
     #[test]
     fn part1() {
         assert_eq!(solution1(&generator(INPUT1)), 112);
+    }
+    #[test]
+    fn step_exand_w() {
+        let pd = generator(INPUT1);
+        assert_eq!(pd.active(), 5);
+        let pd = pd.step(true);
+        assert_eq!(pd.active(), 29);
+        let pd = pd.step(true);
+        assert_eq!(pd.active(), 60);
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(solution2(&generator(INPUT1)), 848);
     }
 }
