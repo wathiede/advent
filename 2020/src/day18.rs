@@ -54,12 +54,17 @@ fn eval(ast: &Ast) -> u32 {
     0
 }
 
-#[derive(Copy, Clone, Default, Debug)]
+#[derive(Copy, Clone, Default, PartialEq)]
 struct NodeId(usize);
+impl fmt::Debug for NodeId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "NodeId({})", self.0)
+    }
+}
 
 #[derive(Debug, Default)]
 struct Node {
-    parent: NodeId,
+    parent: Option<NodeId>,
     data: Option<Token>,
     left: Option<NodeId>,
     right: Option<NodeId>,
@@ -81,14 +86,14 @@ impl Node {
 #[derive(Debug)]
 struct Tree {
     nodes: Vec<Node>,
+    root: NodeId,
 }
 
 use std::fmt;
 impl fmt::Display for Tree {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let cur = NodeId(0);
-
         fn print_node(f: &mut fmt::Formatter<'_>, tree: &Tree, id: NodeId) -> fmt::Result {
+            //dbg!(id, tree.get_node(id));
             match tree.get_node(id).data {
                 None => (),
                 Some(Token::Num(n)) => write!(f, "{}", n)?,
@@ -114,13 +119,14 @@ impl fmt::Display for Tree {
             };
             Ok(())
         }
-        print_node(f, self, cur)
+        print_node(f, self, self.root)
     }
 }
 impl Default for Tree {
     fn default() -> Tree {
         Tree {
             nodes: vec![Node::default()],
+            root: NodeId(0),
         }
     }
 }
@@ -138,7 +144,7 @@ impl Tree {
     }
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 struct Parser {
     tree: Tree,
     cur: NodeId,
@@ -147,13 +153,13 @@ struct Parser {
 
 impl Parser {
     fn add_left_child_cur(&mut self, mut n: Node) -> NodeId {
-        n.parent = self.cur;
+        n.parent = Some(self.cur);
         let id = self.tree.add_node(n);
         self.cur_node_mut().left = Some(id);
         id
     }
     fn add_right_child_cur(&mut self, mut n: Node) -> NodeId {
-        n.parent = self.cur;
+        n.parent = Some(self.cur);
         let id = self.tree.add_node(n);
         self.cur_node_mut().right = Some(id);
         id
@@ -162,25 +168,68 @@ impl Parser {
         self.tree.get_node_mut(self.cur)
     }
 
-    fn parse(&mut self, tokens: &[Token]) {
-        self.debug_tokens = tokens.to_vec();
-        tokens.iter().for_each(|t| {
-            self.add_token(t);
-        });
+    fn cur_node(&self) -> &Node {
+        self.tree.get_node(self.cur)
+    }
+    fn set_cur_data(&mut self, t: &Token) {
+        let cur = self.cur_node();
+        let cur_id = self.cur;
+        if cur.data.is_some() {
+            match cur.right {
+                Some(node) => {
+                    // Create a new node, stick it in `right` and reparent the previous node.
+                    let id = self.tree.add_node(Node {
+                        parent: Some(self.cur),
+                        ..Node::default()
+                    });
+                    self.set_cur_node(id);
+                    self.tree.get_node_mut(cur_id).right = Some(id);
+                    self.cur_node_mut().left = Some(node);
+                }
+                None => {
+                    let id = self.add_right_child_cur(Node::default());
+                    self.set_cur_node(id);
+                }
+            };
+        }
+
+        self.cur_node_mut().data = Some(*t);
+    }
+    fn set_cur_node(&mut self, id: NodeId) {
+        assert_ne!(Some(self.cur), self.cur_node().parent);
+        self.cur = id;
+    }
+    fn set_cur_to_parent(&mut self) {
+        match self.cur_node().parent {
+            Some(parent) => self.set_cur_node(parent),
+            None => {
+                let id = self.tree.add_node(Node::default());
+                self.cur_node_mut().parent = Some(id);
+                let old_id = self.cur;
+                self.tree.root = id;
+
+                self.set_cur_node(id);
+                self.cur_node_mut().left = Some(old_id);
+            }
+        }
     }
     fn add_token(&mut self, t: &Token) {
+        //TODO(wathiede): we seem to be building the tree backwards so that walking the tree works
+        // right-to-left instead of left-to-right.
+        self.debug_tokens.push(*t);
         match t {
-            Token::Num(n) => {
-                self.cur_node_mut().data = Some(*t);
-                self.cur = self.cur_node_mut().parent;
+            Token::Num(_) => {
+                self.set_cur_data(t);
+                self.set_cur_to_parent();
             }
             Token::Add => {
-                self.cur_node_mut().data = Some(*t);
+                self.set_cur_data(t);
                 let id = self.add_right_child_cur(Node::default());
                 self.cur = id;
             }
             Token::Mul => {
-                self.cur_node_mut().data = Some(*t);
+                //dbg!(&self);
+                self.set_cur_data(t);
                 let id = self.add_right_child_cur(Node::default());
                 self.cur = id;
             }
@@ -188,35 +237,43 @@ impl Parser {
                 let id = self.add_left_child_cur(Node::default());
                 self.cur = id;
             }
-            Token::Close => self.cur = self.cur_node_mut().parent,
+            Token::Close => self.set_cur_to_parent(),
             Token::Space => unreachable!("spaces should be filtered"),
         };
     }
     fn eval(&self) -> u32 {
         dbg!(&self.debug_tokens);
-        dbg!(&self.tree);
+        dbg!(format!("{}", self.tree));
         fn eval_inner(tree: &Tree, id: NodeId) -> u32 {
             match tree.get_node(id).data {
                 None => panic!("empty node"),
                 Some(Token::Num(n)) => n,
                 Some(Token::Add) => {
-                    eval_inner(tree, tree.get_node(id).left.unwrap())
-                        + eval_inner(tree, tree.get_node(id).right.unwrap())
+                    let l = eval_inner(tree, tree.get_node(id).left.unwrap());
+                    let r = eval_inner(tree, tree.get_node(id).right.unwrap());
+                    dbg!(l, r);
+                    dbg!(l + r)
                 }
                 Some(Token::Mul) => {
-                    eval_inner(tree, tree.get_node(id).left.unwrap())
-                        * eval_inner(tree, tree.get_node(id).right.unwrap())
+                    let l = eval_inner(tree, tree.get_node(id).left.unwrap());
+                    let r = eval_inner(tree, tree.get_node(id).right.unwrap());
+                    dbg!(l, r);
+                    dbg!(l * r)
                 }
                 Some(Token::Open) => panic!("("),
                 Some(Token::Close) => panic!(")"),
                 Some(Token::Space) => panic!(" "),
             }
         }
-        eval_inner(&self.tree, NodeId(0))
+        eval_inner(&self.tree, self.tree.root)
     }
 }
 
 #[aoc_generator(day18)]
+fn generator(input: &str) -> Vec<Vec<Token>> {
+    input.split('\n').map(lex).collect()
+}
+
 fn lex(input: &str) -> Vec<Token> {
     input
         .bytes()
@@ -236,13 +293,14 @@ fn lex(input: &str) -> Vec<Token> {
 
 fn parse(tokens: &[Token]) -> u32 {
     let mut p = Parser::default();
-    p.parse(tokens);
+    dbg!(&p);
+    tokens.into_iter().for_each(|t| p.add_token(t));
     p.eval()
 }
 
 #[aoc(day18, part1)]
-fn solution1(tokens: &[Token]) -> u32 {
-    parse(tokens)
+fn solution1(tokens_list: &[Vec<Token>]) -> u32 {
+    tokens_list.iter().map(|tokens| parse(tokens)).sum()
 }
 
 #[cfg(test)]
@@ -268,13 +326,14 @@ mod tests {
     #[test]
     fn part1() {
         for (input, want) in vec![
-            ("(1 + 2 * 3 + 4 * 5 + 6)", 71),
+            ("1 + 2 * 3 + 4 * 5 + 6", 71),
             ("2 * 3 + (4 * 5)", 26),
             ("5 + (8 * 3 + 9 + 3 * 4 * 3)", 437),
             ("5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))", 12240),
             ("((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2", 13632),
         ] {
-            assert_eq!(solution1(&lex(input)), want, "{}", input);
+            dbg!(&input);
+            assert_eq!(parse(&lex(input)), want, "{}", input);
         }
     }
 }
