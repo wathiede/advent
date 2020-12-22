@@ -166,12 +166,12 @@ fn allergen_ingredients(foods: &[Food], non_allergens: &HashSet<String>) -> Vec<
     // allergen/ingredient combo.  Then remove that ingredient from all the other entries, and
     // repeat until nothing is left.
     dbg!(&allergen_only);
-    let mut answer = Vec::new();
+    let mut answer = HashMap::new();
     let mut limit = 0;
     loop {
         dbg!(&allergen_only);
         if allergen_only.is_empty() {
-            return answer;
+            return answer.into_iter().collect();
         };
         let mut rm = ("".to_string(), "".to_string());
         allergen_only.iter().for_each(|(a, i_counts)| {
@@ -183,7 +183,7 @@ fn allergen_ingredients(foods: &[Food], non_allergens: &HashSet<String>) -> Vec<
                     .map(|(i, _c)| i)
                     .nth(0)
                     .unwrap();
-                answer.push((a.to_string(), i.to_string()));
+                answer.insert(a.to_string(), i.to_string());
                 rm = (a.to_string(), i.to_string());
             }
         });
