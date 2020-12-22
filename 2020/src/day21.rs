@@ -104,32 +104,11 @@ fn find_non_allergens(foods: &[Food]) -> HashSet<String> {
         });
     });
 
-    //  "nhms": {
-    //     "dairy": 1,
-    //     "fish": 1,
-    // },
-    // "fvjkl": {
-    //     "soy": 1,
-    //     "dairy": 1,
-    // },
-
     ingredient_map
         .iter()
         .filter(|(_, v)| !v.iter().any(|(a, c)| &allergen_map[a] == c))
         .map(|(k, _)| k.to_string())
         .collect()
-
-    /*
-    dbg!(&allergen_map);
-    dbg!(&ingredient_map);
-    let allergens: HashSet<String> = foods
-    .iter()
-    .map(|f| f.allergens.iter())
-    .flatten()
-    .cloned()
-    .collect();
-    HashSet::new()
-    */
 }
 
 #[aoc(day21, part1)]
@@ -162,14 +141,9 @@ fn allergen_ingredients(foods: &[Food], non_allergens: &HashSet<String>) -> Vec<
         });
         println!();
     });
-    // TODO walk over allergen_only.  Find the entries with a single max value, and that's the
-    // allergen/ingredient combo.  Then remove that ingredient from all the other entries, and
-    // repeat until nothing is left.
-    dbg!(&allergen_only);
     let mut answer = HashMap::new();
     let mut limit = 0;
     loop {
-        dbg!(&allergen_only);
         if allergen_only.is_empty() {
             return answer.into_iter().collect();
         };
@@ -204,7 +178,6 @@ fn solution2(foods: &[Food]) -> String {
     let non_allergens = find_non_allergens(foods);
     let mut allergens = allergen_ingredients(foods, &non_allergens);
     allergens.sort_by(|l, r| l.0.cmp(&r.0));
-    dbg!(&allergens);
     allergens
         .iter()
         .map(|(_, a)| a.as_str())
