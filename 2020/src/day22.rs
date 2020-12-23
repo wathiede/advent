@@ -368,11 +368,11 @@
 //!
 //! Defend your honor as Raft Captain by playing the small crab in a game of Recursive Combat using the same two decks as before. What is the winning player's score?
 
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 
 use aoc_runner_derive::aoc;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 struct Players {
     p1: VecDeque<usize>,
     p2: VecDeque<usize>,
@@ -384,17 +384,90 @@ fn generator(input: &str) -> Players {
         p1: players[0]
             .split('\n')
             .skip(1)
-            .map(|s| s.parse().expect("couldn't parse p1 number"))
+            .map(|s| s.trim().parse().expect("couldn't parse p1 number"))
             .collect::<VecDeque<usize>>(),
         p2: players[1]
             .split('\n')
             .skip(1)
-            .map(|s| s.parse().expect("couldn't parse p2 number"))
+            .map(|s| s.trim().parse().expect("couldn't parse p2 number"))
             .collect::<VecDeque<usize>>(),
     }
 }
 
+fn deck_to_str(deck: &VecDeque<usize>) -> String {
+    let mut s = format!("{}", deck.iter().nth(0).unwrap());
+    for c in deck.iter().skip(1) {
+        s = format!("{}, {}", s, c);
+    }
+
+    s
+}
+
+macro_rules! debug_println {
+    ($($arg:tt)*) => (#[cfg(debug_assertions)] println!($($arg)*));
+}
+use std::sync::atomic::{AtomicUsize, Ordering};
+static GAME_NUM: AtomicUsize = AtomicUsize::new(1);
 impl Players {
+    fn play_recursive(&mut self, game: usize, parent_game: usize) -> bool {
+        debug_println!("=== Game {} ===\n", game);
+        let mut round = 0;
+        let mut previous_rounds = HashSet::new();
+        while !self.p1.is_empty() && !self.p2.is_empty() {
+            let p1s = deck_to_str(&self.p1);
+            let p2s = deck_to_str(&self.p2);
+            let deck_key = format!("{} *** {}", p1s, p2s);
+            if previous_rounds.contains(&deck_key) {
+                // Loop detected, p1 wins
+                return true;
+            }
+            debug_println!("{}: {}", game, deck_key);
+            previous_rounds.insert(deck_key);
+
+            let p1 = self.p1.pop_front().unwrap();
+            let p2 = self.p2.pop_front().unwrap();
+            round += 1;
+            debug_println!("-- Round {} (Game {}) --", round, game);
+            debug_println!("Player 1's deck: {}", p1s);
+            debug_println!("Player 2's deck: {}", p2s);
+            debug_println!("Player 1 plays: {}", p1);
+            debug_println!("Player 2 plays: {}", p2);
+            //dbg!(p1, self.p1.len(), p2, self.p2.len());
+            let p1_won = if p1 <= self.p1.len() && p2 <= self.p2.len() {
+                // Recurse
+                debug_println!("Playing a sub-game to determine the winner...\n");
+                let mut sub_game = self.clone();
+                sub_game.p1.truncate(p1);
+                sub_game.p2.truncate(p2);
+                let next_game = GAME_NUM.fetch_add(1, Ordering::SeqCst);
+                let p1_won = sub_game.play_recursive(next_game, game);
+                p1_won
+            } else {
+                p1 > p2
+            };
+
+            if p1_won {
+                debug_println!("Player 1 wins round {} of game {}!", round, game);
+                self.p1.push_back(p1);
+                self.p1.push_back(p2);
+            } else {
+                debug_println!("Player 2 wins round {} of game {}!", round, game);
+                self.p2.push_back(p2);
+                self.p2.push_back(p1);
+            }
+            debug_println!();
+        }
+        let p1_won = self.p1.len() > self.p2.len();
+        if p1_won {
+            debug_println!("The winner of game {} is player 1!", game);
+        } else {
+            debug_println!("The winner of game {} is player 2!", game);
+        }
+
+        debug_println!("...anyway, back to game {}.", parent_game);
+        p1_won
+    }
+
     fn play(&mut self) {
         //let mut round = 0;
         while !self.p1.is_empty() && !self.p2.is_empty() {
@@ -440,22 +513,29 @@ fn solution1(input: &str) -> usize {
     players.winning_score()
 }
 
+#[aoc(day22, part2)]
+fn solution2(input: &str) -> usize {
+    let mut players = generator(input);
+    players.play_recursive(GAME_NUM.fetch_add(1, Ordering::SeqCst), 0);
+    players.winning_score()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     const INPUT: &'static str = r#"Player 1:
-9
-2
-6
-3
-1
+        9
+        2
+        6
+        3
+        1
 
-Player 2:
-5
-8
-4
-7
-10"#;
+        Player 2:
+        5
+        8
+        4
+        7
+        10"#;
 
     #[test]
     fn test_generator() {
@@ -471,5 +551,10 @@ Player 2:
     #[test]
     fn test_solution1() {
         assert_eq!(solution1(INPUT), 306);
+    }
+
+    #[test]
+    fn test_solution2() {
+        assert_eq!(solution2(INPUT), 291);
     }
 }
