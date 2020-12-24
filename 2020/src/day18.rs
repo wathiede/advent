@@ -31,6 +31,27 @@
 //! ((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2 becomes 13632.
 //! Before you can help with the homework, you need to understand it yourself. Evaluate the expression on each line of the homework; what is the sum of the resulting values?
 
+//! --- Part Two ---
+//! You manage to answer the child's questions and they finish part 1 of their homework, but get stuck when they reach the next section: advanced math.
+//!
+//! Now, addition and multiplication have different precedence levels, but they're not the ones you're familiar with. Instead, addition is evaluated before multiplication.
+//!
+//! For example, the steps to evaluate the expression 1 + 2 * 3 + 4 * 5 + 6 are now as follows:
+//!
+//! 1 + 2 * 3 + 4 * 5 + 6
+//!   3   * 3 + 4 * 5 + 6
+//!   3   *   7   * 5 + 6
+//!   3   *   7   *  11
+//!      21       *  11
+//!          231
+//! Here are the other examples from above:
+//!
+//! 1 + (2 * 3) + (4 * (5 + 6)) still becomes 51.
+//! 2 * 3 + (4 * 5) becomes 46.
+//! 5 + (8 * 3 + 9 + 3 * 4 * 3) becomes 1445.
+//! 5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4)) becomes 669060.
+//! ((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2 becomes 23340.
+//! What do you get if you add up the results of evaluating the homework problems using these new rules?
 use aoc_runner_derive::{aoc, aoc_generator};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -72,6 +93,80 @@ fn parse_part1(tokens: &[Token]) -> u64 {
     tokens.into_iter().for_each(|t| p.add_token(t));
     p.eval()
     */
+    let mut stack = vec![Vec::new()];
+    let mut cur_stack = 0;
+    // Reverse the token list so we can pop them.
+    let mut tokens: Vec<_> = tokens.into_iter().rev().collect();
+    while let Some(t) = tokens.pop() {
+        let mut peek = || {
+            let t = tokens.pop().unwrap();
+            tokens.push(t);
+            t
+        };
+        match t {
+            Token::Num(n) => {
+                let t2 = peek();
+                if let Token::Add = t2 {
+                    stack.push(vec![]);
+                    cur_stack += 1;
+                }
+                match stack[cur_stack].last() {
+                    Some(Token::Add) => {
+                        stack[cur_stack].pop();
+                        if let Some(Token::Num(left)) = stack[cur_stack].pop() {
+                            stack[cur_stack].push(Token::Num(left + n));
+                        }
+                    }
+                    Some(Token::Mul) => {
+                        stack[cur_stack].pop();
+                        if let Some(Token::Num(left)) = stack[cur_stack].pop() {
+                            stack[cur_stack].push(Token::Num(left * n));
+                        }
+                    }
+                    None => stack[cur_stack].push(*t),
+                    c => {
+                        dbg!(&c);
+                    }
+                }
+            }
+            Token::Add => stack[cur_stack].push(*t),
+            Token::Mul => stack[cur_stack].push(*t),
+            Token::Open => {
+                stack.push(vec![]);
+                cur_stack += 1;
+            }
+            Token::Close => {
+                // Take the result of this parenthetical group and push it on to the stack one
+                // level below.
+                assert_eq!(stack[cur_stack].len(), 1);
+                let t = stack[cur_stack].pop().unwrap();
+                stack.pop();
+                cur_stack -= 1;
+                stack[cur_stack].push(t);
+                // If the stack has 3 things, it was waiting for this result.
+                let len = stack[cur_stack].len();
+                if len >= 3 {
+                    let s = &mut stack[cur_stack];
+                    match (s.pop(), s.pop(), s.pop()) {
+                        (Some(Token::Num(right)), Some(op), Some(Token::Num(left))) => match op {
+                            Token::Add => stack[cur_stack].push(Token::Num(left + right)),
+                            Token::Mul => stack[cur_stack].push(Token::Num(left * right)),
+                            d => panic!(format!("unexpected op {:?}", d)),
+                        },
+                        d => panic!(format!("unexpected trio from on stack: {:?}", d)),
+                    }
+                }
+            }
+            Token::Space => unreachable!("no space should be present"),
+        };
+    }
+    match stack[cur_stack].last() {
+        Some(Token::Num(n)) => *n,
+        d => panic!(format!("Unexpected stack contents: {:?}", d)),
+    }
+}
+
+fn parse_part2(tokens: &[Token]) -> u64 {
     let mut stack = vec![Vec::new()];
     let mut cur_stack = 0;
     tokens.iter().for_each(|t| {
@@ -131,16 +226,12 @@ fn parse_part1(tokens: &[Token]) -> u64 {
     }
 }
 
-fn parse_part2(tokens: &[Token]) -> u64 {
-    todo!("parse_part2");
-}
-
 #[aoc(day18, part1)]
 fn solution1(tokens_list: &[Vec<Token>]) -> u64 {
     tokens_list.iter().map(|tokens| parse_part1(tokens)).sum()
 }
 
-//#[aoc(day18, part2)]
+#[aoc(day18, part2)]
 fn solution2(tokens_list: &[Vec<Token>]) -> u64 {
     tokens_list.iter().map(|tokens| parse_part2(tokens)).sum()
 }
@@ -167,7 +258,6 @@ mod tests {
 
     #[test]
     fn part1() {
-        // 1106240272 too low
         for (input, want) in vec![
             ("1 + 2 * 3", 9),
             ("(1 + 2) * 3", 9),
@@ -180,10 +270,8 @@ mod tests {
             ("5 + (8 * 3 + 9 + 3 * 4 * 3)", 437),
             ("5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))", 12240),
             ("((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2", 13632),
-            //("((9 * 7 + 6 + 7 * 9 + 2) * 4 + 3 + 4 + 4 * 6) * 8 + (4 + (8 + 2 * 6 * 4 * 3)) + (5 + 2 * 6 * (4 * 5 + 4 + 2)) + 4 * (6 + 3 * (2 * 2 * 6 * 3) + 8 + 4 * 5)", 1740572064000),
         ] {
             let got = parse_part1(&lex(input));
-            eprintln!("got {}, want {} for {}", got, want, input);
             assert_eq!(got, want, "got {}, want {} for {}", got, want, input);
         }
         let input = r#"1 + 2 * 3 + 4 * 5 + 6
@@ -192,6 +280,19 @@ mod tests {
             5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))
             ((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2"#;
         assert_eq!(solution1(&generator(input)), 71 + 26 + 437 + 12240 + 13632);
+    }
+    #[test]
+    fn part2() {
+        for (input, want) in vec![
+            ("1 + (2 * 3) + (4 * (5 + 6))", 51),
+            ("2 * 3 + (4 * 5)", 46),
+            ("5 + (8 * 3 + 9 + 3 * 4 * 3)", 1445),
+            ("5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))", 669060),
+            ("((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2)", 23340),
+        ] {
+            let got = parse_part2(&lex(input));
+            assert_eq!(got, want, "got {}, want {} for {}", got, want, input);
+        }
     }
     #[test]
     fn comprehensive_part1() {
@@ -573,12 +674,11 @@ mod tests {
         ts.sort_by(|l, r| l.0.len().cmp(&r.0.len()));
         for (input, want) in ts {
             let got = parse_part1(&lex(input));
-            eprintln!("got {}, want {} for {}", got, want, input);
             assert_eq!(got, want, "got {}, want {} for {}", got, want, input);
         }
     }
 
-    //#[test]
+    #[test]
     fn comprehensive_part2() {
         let mut ts = vec![
             ("(7 * (3 + 8 + 8 + 7) + (6 + 8 * 2 + 5 + 2 * 6) * (5 + 2) * 9) + ((7 * 4 + 8) * 6 * 8 + 9) * 7 * 2 * 2", 9896040),
@@ -958,7 +1058,6 @@ mod tests {
         ts.sort_by(|l, r| l.0.len().cmp(&r.0.len()));
         for (input, want) in ts {
             let got = parse_part2(&lex(input));
-            eprintln!("got {}, want {} for {}", got, want, input);
             assert_eq!(got, want, "got {}, want {} for {}", got, want, input);
         }
     }
