@@ -372,6 +372,8 @@ use std::collections::{HashSet, VecDeque};
 
 use aoc_runner_derive::aoc;
 
+use crate::debug_println;
+
 #[derive(Clone, Debug, PartialEq)]
 struct Players {
     p1: VecDeque<usize>,
@@ -401,10 +403,6 @@ fn deck_to_str(deck: &VecDeque<usize>) -> String {
     }
 
     s
-}
-
-macro_rules! debug_println {
-    ($($arg:tt)*) => (#[cfg(debug_assertions)] println!($($arg)*));
 }
 use std::sync::atomic::{AtomicUsize, Ordering};
 static GAME_NUM: AtomicUsize = AtomicUsize::new(1);
