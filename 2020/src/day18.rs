@@ -52,16 +52,19 @@
 //! 5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4)) becomes 669060.
 //! ((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2 becomes 23340.
 //! What do you get if you add up the results of evaluating the homework problems using these new rules?
+use std::collections::VecDeque;
+
 use aoc_runner_derive::{aoc, aoc_generator};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-enum Token {
+pub enum Token {
     Num(u64),
     Add,
     Mul,
     Open,
     Close,
     Space,
+    Stop,
 }
 
 #[aoc_generator(day18)]
@@ -83,152 +86,134 @@ fn lex(input: &str) -> Vec<Token> {
         })
         // Ignore spaces
         .filter(|t| t != &Token::Space)
+        .chain(std::iter::once(Token::Stop))
         .collect()
 }
 
-fn parse_part1(tokens: &[Token]) -> u64 {
-    /*
-    let mut p = Parser::default();
-    dbg!(&p);
-    tokens.into_iter().for_each(|t| p.add_token(t));
-    p.eval()
-    */
-    let mut stack = vec![Vec::new()];
-    let mut cur_stack = 0;
-    // Reverse the token list so we can pop them.
-    let mut tokens: Vec<_> = tokens.into_iter().rev().collect();
-    while let Some(t) = tokens.pop() {
-        let mut peek = || {
-            let t = tokens.pop().unwrap();
-            tokens.push(t);
-            t
-        };
+mod part1 {
+    use std::collections::VecDeque;
+
+    use super::Token;
+    fn parse_item(tokens: &mut VecDeque<Token>) -> u64 {
+        let t = tokens.pop_front().unwrap();
         match t {
-            Token::Num(n) => {
-                let t2 = peek();
-                if let Token::Add = t2 {
-                    stack.push(vec![]);
-                    cur_stack += 1;
-                }
-                match stack[cur_stack].last() {
-                    Some(Token::Add) => {
-                        stack[cur_stack].pop();
-                        if let Some(Token::Num(left)) = stack[cur_stack].pop() {
-                            stack[cur_stack].push(Token::Num(left + n));
-                        }
-                    }
-                    Some(Token::Mul) => {
-                        stack[cur_stack].pop();
-                        if let Some(Token::Num(left)) = stack[cur_stack].pop() {
-                            stack[cur_stack].push(Token::Num(left * n));
-                        }
-                    }
-                    None => stack[cur_stack].push(*t),
-                    c => {
-                        dbg!(&c);
-                    }
-                }
-            }
-            Token::Add => stack[cur_stack].push(*t),
-            Token::Mul => stack[cur_stack].push(*t),
+            Token::Num(n) => return n,
             Token::Open => {
-                stack.push(vec![]);
-                cur_stack += 1;
-            }
-            Token::Close => {
-                // Take the result of this parenthetical group and push it on to the stack one
-                // level below.
-                assert_eq!(stack[cur_stack].len(), 1);
-                let t = stack[cur_stack].pop().unwrap();
-                stack.pop();
-                cur_stack -= 1;
-                stack[cur_stack].push(t);
-                // If the stack has 3 things, it was waiting for this result.
-                let len = stack[cur_stack].len();
-                if len >= 3 {
-                    let s = &mut stack[cur_stack];
-                    match (s.pop(), s.pop(), s.pop()) {
-                        (Some(Token::Num(right)), Some(op), Some(Token::Num(left))) => match op {
-                            Token::Add => stack[cur_stack].push(Token::Num(left + right)),
-                            Token::Mul => stack[cur_stack].push(Token::Num(left * right)),
-                            d => panic!(format!("unexpected op {:?}", d)),
-                        },
-                        d => panic!(format!("unexpected trio from on stack: {:?}", d)),
-                    }
+                let expr = parse_expression(tokens);
+                if let Token::Close = tokens[0] {
+                    // TODO(wathiede): how to do not?
+                } else {
+                    panic!("expected close paren");
                 }
+                tokens.pop_front();
+                return expr;
             }
-            Token::Space => unreachable!("no space should be present"),
+            t => panic!(format!("unexpected token {:?}", t)),
         };
     }
-    match stack[cur_stack].last() {
-        Some(Token::Num(n)) => *n,
-        d => panic!(format!("Unexpected stack contents: {:?}", d)),
+
+    fn parse_term(tokens: &mut VecDeque<Token>) -> u64 {
+        let mut result = parse_item(tokens);
+        let mut t = tokens[0];
+        loop {
+            match t {
+                Token::Mul | Token::Add => {
+                    tokens.pop_front();
+                    let rhs = parse_item(tokens);
+                    if let Token::Mul = t {
+                        result = result + rhs;
+                    }
+                    t = tokens[0];
+                }
+                _ => break,
+            }
+        }
+        result
+    }
+
+    pub fn parse_expression(tokens: &mut VecDeque<Token>) -> u64 {
+        let mut result = parse_term(tokens);
+        let mut t = tokens[0];
+        loop {
+            match t {
+                Token::Mul | Token::Add => {
+                    tokens.pop_front();
+                    let rhs = parse_term(tokens);
+                    if let Token::Add = t {
+                        result = result * rhs;
+                    }
+                    t = tokens[0];
+                }
+                _ => break,
+            }
+        }
+        result
     }
 }
-
-fn parse_part2(tokens: &[Token]) -> u64 {
-    let mut stack = vec![Vec::new()];
-    let mut cur_stack = 0;
-    tokens.iter().for_each(|t| {
-        match t {
-            Token::Num(n) => match stack[cur_stack].last() {
-                Some(Token::Add) => {
-                    stack[cur_stack].pop();
-                    if let Some(Token::Num(left)) = stack[cur_stack].pop() {
-                        stack[cur_stack].push(Token::Num(left + n));
-                    }
-                }
-                Some(Token::Mul) => {
-                    stack[cur_stack].pop();
-                    if let Some(Token::Num(left)) = stack[cur_stack].pop() {
-                        stack[cur_stack].push(Token::Num(left * n));
-                    }
-                }
-                None => stack[cur_stack].push(*t),
-                c => {
-                    dbg!(&c);
-                }
-            },
-            Token::Add => stack[cur_stack].push(*t),
-            Token::Mul => stack[cur_stack].push(*t),
-            Token::Open => {
-                stack.push(vec![]);
-                cur_stack += 1;
-            }
-            Token::Close => {
-                // Take the result of this parenthetical group and push it on to the stack one
-                // level below.
-                assert_eq!(stack[cur_stack].len(), 1);
-                let t = stack[cur_stack].pop().unwrap();
-                stack.pop();
-                cur_stack -= 1;
-                stack[cur_stack].push(t);
-                // If the stack has 3 things, it was waiting for this result.
-                let len = stack[cur_stack].len();
-                if len >= 3 {
-                    let s = &mut stack[cur_stack];
-                    match (s.pop(), s.pop(), s.pop()) {
-                        (Some(Token::Num(right)), Some(op), Some(Token::Num(left))) => match op {
-                            Token::Add => stack[cur_stack].push(Token::Num(left + right)),
-                            Token::Mul => stack[cur_stack].push(Token::Num(left * right)),
-                            d => panic!(format!("unexpected op {:?}", d)),
-                        },
-                        d => panic!(format!("unexpected trio from on stack: {:?}", d)),
-                    }
-                }
-            }
-            Token::Space => unreachable!("no space should be present"),
-        };
-    });
-    match stack[cur_stack].last() {
-        Some(Token::Num(n)) => *n,
-        d => panic!(format!("Unexpected stack contents: {:?}", d)),
-    }
+fn parse_part1(tokens: &[Token]) -> u64 {
+    let mut vd: VecDeque<Token> = tokens.into_iter().cloned().collect();
+    part1::parse_expression(&mut vd)
 }
 
 #[aoc(day18, part1)]
 fn solution1(tokens_list: &[Vec<Token>]) -> u64 {
     tokens_list.iter().map(|tokens| parse_part1(tokens)).sum()
+}
+
+mod part2 {
+    use std::collections::VecDeque;
+
+    use super::Token;
+    fn parse_item(tokens: &mut VecDeque<Token>) -> u64 {
+        let t = tokens.pop_front().unwrap();
+        match t {
+            Token::Num(n) => return n,
+            Token::Open => {
+                let expr = parse_expression(tokens);
+                if let Token::Close = tokens[0] {
+                    // TODO(wathiede): how to do not?
+                } else {
+                    panic!("expected close paren");
+                }
+                tokens.pop_front();
+                return expr;
+            }
+            t => panic!(format!("unexpected token {:?}", t)),
+        };
+    }
+
+    fn parse_term(tokens: &mut VecDeque<Token>) -> u64 {
+        let mut result = parse_item(tokens);
+        let mut t = tokens[0];
+        while let Token::Add = t {
+            tokens.pop_front();
+            let rhs = parse_item(tokens);
+            if let Token::Add = t {
+                result = result + rhs;
+            }
+            t = tokens[0];
+        }
+        result
+    }
+
+    pub fn parse_expression(tokens: &mut VecDeque<Token>) -> u64 {
+        let mut result = parse_term(tokens);
+        let mut t = tokens[0];
+        while let Token::Mul = t {
+            tokens.pop_front();
+            let rhs = parse_term(tokens);
+            if let Token::Mul = t {
+                result = result * rhs;
+            }
+            t = tokens[0];
+        }
+        result
+    }
+}
+
+fn parse_part2(tokens: &[Token]) -> u64 {
+    let mut vd: VecDeque<Token> = tokens.into_iter().cloned().collect();
+    part2::parse_expression(&mut vd)
 }
 
 #[aoc(day18, part2)]
@@ -252,6 +237,7 @@ mod tests {
             Token::Mul,
             Token::Num(5),
             Token::Close,
+            Token::Stop,
         ];
         assert_eq!(lex("2 * 3 + (4 * 5)"), tokens);
     }
