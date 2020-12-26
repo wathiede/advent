@@ -410,6 +410,9 @@ impl Players {
     fn play_recursive(&mut self, game: usize, parent_game: usize) -> bool {
         debug_println!("=== Game {} ===\n", game);
         let mut round = 0;
+        // For debug builds only.
+        let _ = round;
+        let _ = parent_game;
         let mut previous_rounds = HashSet::new();
         while !self.p1.is_empty() && !self.p2.is_empty() {
             let p1s = deck_to_str(&self.p1);
