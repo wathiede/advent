@@ -38,6 +38,42 @@
 //! In the above example, 10 tiles are flipped once (to black), and 5 more are flipped twice (to black, then back to white). After all of these instructions have been followed, a total of 10 tiles are black.
 //!
 //! Go through the renovation crew's list and determine which tiles they need to flip. After all of the instructions have been followed, how many tiles are left with the black side up?
+//!
+//! --- Part Two ---
+//! The tile floor in the lobby is meant to be a living art exhibit. Every day, the tiles are all flipped according to the following rules:
+//!
+//! Any black tile with zero or more than 2 black tiles immediately adjacent to it is flipped to white.
+//! Any white tile with exactly 2 black tiles immediately adjacent to it is flipped to black.
+//! Here, tiles immediately adjacent means the six tiles directly touching the tile in question.
+//!
+//! The rules are applied simultaneously to every tile; put another way, it is first determined which tiles need to be flipped, then they are all flipped at the same time.
+//!
+//! In the above example, the number of black tiles that are facing up after the given number of days has passed is as follows:
+//!
+//! Day 1: 15
+//! Day 2: 12
+//! Day 3: 25
+//! Day 4: 14
+//! Day 5: 23
+//! Day 6: 28
+//! Day 7: 41
+//! Day 8: 37
+//! Day 9: 49
+//! Day 10: 37
+//!
+//! Day 20: 132
+//! Day 30: 259
+//! Day 40: 406
+//! Day 50: 566
+//! Day 60: 788
+//! Day 70: 1106
+//! Day 80: 1373
+//! Day 90: 1844
+//! Day 100: 2208
+//! After executing this process a total of 100 times, there would be 2208 black tiles facing up.
+//!
+//! How many tiles will be black after 100 days?
+
 use std::collections::HashMap;
 
 use aoc_runner_derive::{aoc, aoc_generator};
@@ -52,7 +88,7 @@ enum Direction {
     NorthEast,
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 struct TileCoord((isize, isize, isize));
 
 #[derive(Debug, PartialEq)]
@@ -112,14 +148,86 @@ fn parse(input: &str) -> Vec<Tile> {
         .collect()
 }
 
-#[aoc(day24, part1)]
-fn solution1(tiles: &[Tile]) -> usize {
-    let mut colors: HashMap<TileCoord, bool> = HashMap::new();
-    tiles.iter().for_each(|t| {
-        let v = colors.entry(t.coord()).or_insert(false);
+fn follow_instructions(instructions: &[Tile]) -> HashMap<TileCoord, bool> {
+    // False == white
+    // True == black
+    // Default == white
+    let mut tiles: HashMap<TileCoord, bool> = HashMap::new();
+    instructions.iter().for_each(|t| {
+        let v = tiles.entry(t.coord()).or_insert(false);
         *v = !*v;
     });
-    colors.values().filter(|v| **v).count()
+    tiles
+}
+
+#[aoc(day24, part1)]
+fn solution1(instructions: &[Tile]) -> usize {
+    let tiles = follow_instructions(instructions);
+    count_black(&tiles)
+}
+
+const NEIGHBOR_OFFSETS: [(isize, isize, isize); 6] = [
+    (-1, 1, 0),
+    (1, -1, 0),
+    (-1, 0, 1),
+    (1, 0, -1),
+    (0, -1, 1),
+    (0, 1, -1),
+];
+
+fn count_neighbors(coord: &TileCoord, tiles: &HashMap<TileCoord, bool>) -> usize {
+    let (x, y, z) = coord.0;
+    NEIGHBOR_OFFSETS
+        .iter()
+        .filter(|(x_o, y_o, z_o)| {
+            *tiles
+                .get(&TileCoord((x + x_o, y + y_o, z + z_o)))
+                .unwrap_or(&false)
+        })
+        .count()
+}
+
+fn count_black(tiles: &HashMap<TileCoord, bool>) -> usize {
+    tiles.values().filter(|v| **v).count()
+}
+
+fn step(tiles: HashMap<TileCoord, bool>) -> HashMap<TileCoord, bool> {
+    let mut output = HashMap::new();
+    tiles
+        .iter()
+        .filter_map(|(k, v)| if *v { Some(k) } else { None })
+        .for_each(|coord| {
+            match count_neighbors(coord, &tiles) {
+                1 | 2 => {
+                    // Leave black
+                    output.insert(*coord, true);
+                }
+                _ => {
+                    // 0 or >=2, default is white, so don't set anything in new map.
+                }
+            };
+
+            let (x, y, z) = coord.0;
+            // TODO search white neighbors.
+            NEIGHBOR_OFFSETS.iter().for_each(|(x_o, y_o, z_o)| {
+                let coord = TileCoord((x + x_o, y + y_o, z + z_o));
+                if *tiles.get(&coord).unwrap_or(&false) {
+                    // Black, we can skip
+                    return;
+                }
+                if count_neighbors(&coord, &tiles) == 2 {
+                    output.insert(coord, true);
+                }
+            });
+        });
+    output
+}
+
+#[aoc(day24, part2)]
+fn solution2(instructions: &[Tile]) -> usize {
+    let tiles = follow_instructions(instructions);
+    let tiles = (0..100).fold(tiles, |tiles, _| step(tiles));
+    count_black(&tiles)
 }
 
 #[cfg(test)]
@@ -162,5 +270,25 @@ wseweeenwnesenwwwswnew
     #[test]
     fn part1() {
         assert_eq!(solution1(&parse(INPUT)), 10);
+    }
+
+    #[test]
+    fn test_step() {
+        let instructions = parse(INPUT);
+        let tiles = follow_instructions(&instructions);
+        let wants = vec![15, 12, 25, 14, 23, 28, 41, 37, 49, 37];
+        wants
+            .iter()
+            .enumerate()
+            .fold(tiles, |mut tiles, (i, want)| {
+                tiles = step(tiles);
+                assert_eq!(count_black(&tiles), *want, "step {}", i);
+                tiles
+            });
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(solution2(&parse(INPUT)), 2208);
     }
 }
