@@ -262,7 +262,9 @@ use std::str::FromStr;
 
 use aoc_runner_derive::{aoc, aoc_generator};
 
-#[derive(Default, Hash, Eq, PartialEq)]
+use crate::debug_println;
+
+#[derive(Clone, Default, Hash, Eq, PartialEq)]
 struct Tile {
     id: usize,
     pixels: Vec<u8>,
@@ -272,7 +274,7 @@ struct Tile {
 
 impl fmt::Debug for Tile {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Tile {}:\n", self.id)?;
+        write!(f, "Tile {} ({}x{}):\n", self.id, self.width, self.height)?;
         for y in 0..self.height {
             for x in 0..self.width {
                 write!(f, "{}", self[(x, y)] as char)?;
@@ -330,6 +332,7 @@ impl Index<(usize, usize)> for Tile {
     }
 }
 
+#[cfg(debug_assertions)]
 fn border_to_str(border: &[u8]) -> String {
     std::str::from_utf8(border).unwrap().to_string()
 }
@@ -337,6 +340,14 @@ fn border_to_str(border: &[u8]) -> String {
 impl Tile {
     /// Copy `t` into self @ x_off,y_off.
     fn blit(&mut self, t: &Tile, x_off: usize, y_off: usize) {
+        debug_println!(
+            "blitting tile {} {}x{} @ {},{}",
+            t.id,
+            t.width,
+            t.height,
+            x_off,
+            y_off
+        );
         (0..t.height)
             .for_each(|y| (0..t.width).for_each(|x| self[(x_off + x, y_off + y)] = t[(x, y)]));
     }
@@ -456,56 +467,62 @@ impl Tile {
 }
 
 /// Tries various orientations, until predicate matches.
-fn reorient<F>(img: &Tile, predicate: F) -> Tile
+fn reorient<F>(img: &Tile, predicate: F) -> Option<Tile>
 where
     F: Fn(&Tile) -> bool,
 {
+    if predicate(&img) {
+        return Some(img.clone());
+    }
     let rotated = img.rotate90();
     if predicate(&rotated) {
-        return rotated;
+        return Some(rotated);
     }
 
     let rotated = img.rotate180();
     if predicate(&rotated) {
-        return rotated;
+        return Some(rotated);
     }
 
     let rotated = img.rotate270();
     if predicate(&rotated) {
-        return rotated;
+        return Some(rotated);
     }
 
     let horiz = img.flip_horizontal();
+    if predicate(&horiz) {
+        return Some(horiz);
+    }
 
     let rotated = horiz.rotate90();
     if predicate(&rotated) {
-        return rotated;
+        return Some(rotated);
     }
 
     let rotated = horiz.rotate180();
     if predicate(&rotated) {
-        return rotated;
+        return Some(rotated);
     }
 
     let rotated = horiz.rotate270();
     if predicate(&rotated) {
-        return rotated;
+        return Some(rotated);
     }
-    panic!("couldn't find an orientation matching predicate");
+    None
 }
 
 fn stitch(tiles: &[Tile]) -> Tile {
-    // Make sure there's a sqare number of tiles.
+    // Make sure there's a square number of tiles.
     let sqrt = (tiles.len() as f32).sqrt() as usize;
     assert_eq!(sqrt * sqrt, tiles.len());
 
     let width = sqrt * (tiles[0].width - 2);
-    let height = sqrt * (tiles[0].width - 2);
+    let height = sqrt * (tiles[0].height - 2);
     let mut image = Tile {
         id: 0,
         width,
         height,
-        pixels: vec![b' '; width * height],
+        pixels: vec![b'X'; width * height],
     };
 
     let mut border_counts = HashMap::new();
@@ -518,91 +535,135 @@ fn stitch(tiles: &[Tile]) -> Tile {
         })
     });
 
-    // Find a corner, and then stitch from there.
-    let corner = tiles
+    #[cfg(debug_assertions)]
+    border_counts.iter().for_each(|(b, c)| {
+        let _ = b;
+        let _ = c;
+        debug_println!("{}: {}", border_to_str(b), c);
+    });
+
+    let edge_borders: HashSet<_> = border_counts
         .iter()
-        .filter(|t| {
-            let matches: usize = t.border_set().iter().map(|b| border_counts[b]).sum();
-            matches == 12
-        })
-        // Grab the min for repeatable results.
-        .min_by(|l, r| l.id.cmp(&r.id))
-        .expect("couldn't find corner");
-    /*
-       let corner = reorient(&corner.flip_horizontal(), |im| {
-    // Reorient until the top and left borders are edges.  This has a 50/50 chance of being
-    // right, and we can't verify it until the first neighbor is found.
-    border_counts[&im.top_border()] == 2 && border_counts[&im.left_border()] == 2
-    });
-    */
-    let mut map_ids = vec![vec![0; sqrt]; sqrt];
-
-    map_ids[0][0] = corner.id;
-    let id_to_tile: HashMap<_, _> = tiles.iter().map(|t| (t.id, t)).collect();
-    let mut remaining_tiles: HashSet<_> = tiles.iter().collect();
-    remaining_tiles.remove(&corner);
-    let mut prev_tile = corner;
-
-    (0..sqrt)
-        .map(|y| (0..sqrt).map(move |x| (x, y)))
-        .flatten()
-        .skip(1)
-        .for_each(|(x, y)| {
-            if x == 0 {
-                // Beginning of a new row, use the tile above as the previous tile.
-                prev_tile = id_to_tile[&map_ids[x][y - 1]];
-            }
-            dbg!((x, y), prev_tile.id);
-            let neighbor = remaining_tiles
-                .iter()
-                .filter(|t| t.border_set().intersection(&prev_tile.border_set()).count() > 0)
-                .nth(0)
-                .expect("couldn't find neighbor");
-            map_ids[x][y] = neighbor.id;
-            dbg!(&map_ids);
-            prev_tile = neighbor;
-            remaining_tiles.remove(prev_tile);
-        });
-
-    let corner = reorient(corner, |im| {
-        let right_set = id_to_tile[&map_ids[1][0]].border_set();
-        let bottom_set = id_to_tile[&map_ids[0][1]].border_set();
-        right_set.contains(&im.right_border()) && bottom_set.contains(&im.bottom_border())
-    });
-    // Map tile id to correctly oriented Tile.
-    let mut oriented = HashMap::new();
-    oriented.insert(corner.id, corner);
-    (0..sqrt)
-        .map(|y| (0..sqrt).map(move |x| (x, y)))
-        .flatten()
-        .skip(1)
-        .for_each(|(x, y)| {
-            let t = id_to_tile[&map_ids[x][y]];
-            let t = if x == 0 {
-                // Beginning of a new row, use the tile above as the previous tile.
-                let above_tile = id_to_tile[&map_ids[x][y - 1]];
-                reorient(t, |im| {
-                    dbg!(
-                        border_to_str(&above_tile.right_border()),
-                        border_to_str(&im.left_border())
-                    );
-                    above_tile.bottom_border() == im.top_border()
-                })
-            // TODO(wathiede): reorient and blit.
-            } else {
-                // Use the tile to the left as previous tile.
-                let left_tile = id_to_tile[&map_ids[x - 1][y]];
-                reorient(t, |im| {
-                    dbg!(
-                        border_to_str(&left_tile.right_border()),
-                        border_to_str(&im.left_border())
-                    );
-                    left_tile.right_border() == im.left_border()
-                })
+        .filter(|(_b, c)| **c == 1)
+        .map(|(b, _c)| b)
+        .collect();
+    // Count the number of borders that are in edge_borders.  The answer should be 0, 1 or 2
+    // if the tile is a middle, edge or corner, respectively.
+    let (corner_tiles, _edge_tiles, _center_tiles) = tiles.iter().fold(
+        (vec![], vec![], vec![]),
+        |(mut corner, mut edge, mut center), t| {
+            let edge_count = vec![
+                t.top_border(),
+                t.right_border(),
+                t.bottom_border(),
+                t.left_border(),
+            ]
+            .into_iter()
+            .filter(|b| edge_borders.contains(b))
+            .count();
+            match edge_count {
+                0 => center.push(t),
+                1 => edge.push(t),
+                2 => corner.push(t),
+                c => panic!(format!("unexpected edge_count for {:?}: {}", t, c)),
             };
+            (corner, edge, center)
+        },
+    );
+
+    let mut tile_map = vec![vec![None; sqrt]; sqrt];
+    let corner = corner_tiles[0];
+    // Make this the upper-left corner at 0,0.
+    let corner = reorient(corner, |im| {
+        edge_borders.contains(&im.left_border()) && edge_borders.contains(&im.top_border())
+    })
+    .expect("couldn't find proper orientation");
+    let mut remaining_tiles: HashSet<_> = tiles.iter().filter(|t| t.id != corner.id).collect();
+    let mut last = corner.clone();
+    tile_map[0][0] = Some(corner);
+    (0..sqrt)
+        .map(|y| (0..sqrt).map(move |x| (x, y)))
+        .flatten()
+        .skip(1)
+        .for_each(|(x, y)| {
+            debug_println!("Solving for tile {},{}", x, y);
+            let mut local_last = last.clone();
+            let orientation_check: Box<dyn Fn(&Tile) -> bool> = if y == 0 {
+                debug_println!("search for top row tiles");
+                // Top row, tiles should be match the tile to the left and have their top_border in the
+                // edge set.
+                // Find a tile that matches last and reorient so it's edge is on top.
+                Box::new(|im: &Tile| {
+                    edge_borders.contains(&im.top_border())
+                        && im.left_border() == local_last.right_border()
+                })
+            } else if x == 0 {
+                debug_println!("search for left column tiles");
+                // When we're in the first column, we need to match against the tile above, instead of
+                // the last tile on the previous row.
+                local_last = tile_map[0][y - 1]
+                    .as_ref()
+                    .expect(&format!("couldn't file tile above {},{}", x, y))
+                    .clone();
+                Box::new(|im: &Tile| {
+                    edge_borders.contains(&im.left_border())
+                        && im.top_border() == local_last.bottom_border()
+                })
+            } else {
+                debug_println!("search for regular tiles");
+                // Default, last is to the left match shared edge.
+                Box::new(|im: &Tile| im.left_border() == local_last.right_border())
+            };
+
+            debug_println!("last tile {}", last.id);
+            let mut found: Option<Tile> = None;
+            for candidate in &remaining_tiles {
+                match reorient(candidate, &orientation_check) {
+                    Some(good) => {
+                        debug_println!("found3 {}", good.id);
+                        found = Some(good);
+                        break;
+                    }
+                    None => continue,
+                };
+            }
+            match found {
+                Some(rm) => {
+                    debug_println!(
+                        "rm3 {} {:?}",
+                        rm.id,
+                        remaining_tiles.iter().map(|t| t.id).collect::<Vec<_>>()
+                    );
+                    last = rm.clone();
+                    tile_map[x][y] = Some(last.clone());
+                    let rm = remaining_tiles
+                        .iter()
+                        .filter(|t| t.id == rm.id)
+                        .nth(0)
+                        .expect(&format!("Couldn't find {} in remaining_tiles", rm.id))
+                        .clone();
+                    remaining_tiles.remove(rm);
+                }
+                None => panic!("couldn't find match for {},{}", x, y),
+            };
+        });
+    debug_println!("Stitched titles");
+    #[cfg(debug_assertions)]
+    (0..sqrt).for_each(|y| {
+        let row_ids: Vec<_> = (0..sqrt)
+            .map(|x| tile_map[x][y].as_ref().unwrap().id)
+            .collect();
+        debug_println!("{:?}", row_ids);
+    });
+    (0..sqrt)
+        .map(|y| (0..sqrt).map(move |x| (x, y)))
+        .flatten()
+        .for_each(|(x, y)| {
+            let t = tile_map[x][y]
+                .as_ref()
+                .expect(&format!("missing tile {},{} in completed tile_map", x, y));
             let out = t.strip_border();
-            image.blit(&out.strip_border(), x * out.width, y * out.height);
-            oriented.insert(t.id, t);
+            image.blit(&out, x * out.width, y * out.height);
         });
 
     // TODO(wathiede) paste oriented into image.
@@ -659,7 +720,9 @@ fn contains_seamonster(t: &Tile) -> bool {
 
 #[aoc(day20, part2)]
 fn solution2(tiles: &[Tile]) -> usize {
-    habitat(&reorient(&stitch(tiles), contains_seamonster))
+    let full_map = stitch(tiles);
+    debug_println!("Full map\n{:?}", full_map);
+    habitat(&reorient(&full_map, contains_seamonster).expect("couldn't find proper orientation"))
 }
 
 #[cfg(test)]
@@ -789,30 +852,30 @@ mod tests {
     }
 
     const OUTPUT_IMAGE: &'static str = r#"Tile 0:
-        .#.#..#.##...#.##..#####
+.#.#..#.##...#.##..#####
 ###....#.#....#..#......
 ##.##.###.#.#..######...
 ###.#####...#.#####.#..#
 ##.#....#.##.####...#.##
-        ...########.#....#####.#
-        ....#..#...##..#.#.###..
-        .####...#..#.....#......
+...########.#....#####.#
+....#..#...##..#.#.###..
+.####...#..#.....#......
 #..#.##..#..###.#.##....
 #.####..#.####.#.#.###..
 ###.#.#...#.######.#..##
 #.####....##..########.#
 ##..##.#...#...#.#.#.#..
-        ...#..#..#.#.##..###.###
-        .#.#....#.##.#...###.##.
+...#..#..#.#.##..###.###
+.#.#....#.##.#...###.##.
 ###.#...#..#.##.######..
-        .#.#.###.##.##.#..#.##..
-        .####.###.#...###.#..#.#
-        ..#.#..#..#.#.#.####.###
+.#.#.###.##.##.#..#.##..
+.####.###.#...###.#..#.#
+..#.#..#..#.#.#.####.###
 #..####...#.#.#.###.###.
 #####..#####...###....##
 #.##..#..#...#..####...#
-        .#.###..##..##..####.##.
-        ...###...##...#...#..###"#;
+.#.###..##..##..####.##.
+...###...##...#...#..###"#;
 
     #[test]
     fn make_image() {
@@ -845,6 +908,7 @@ mod tests {
         let monster = seamonster();
         assert_eq!(
             reorient(&img, contains_seamonster)
+                .expect("couldn't find proper orientation")
                 .find_hashes(&monster)
                 .len(),
             2
@@ -887,10 +951,42 @@ mod tests {
     #[test]
     fn test_habitat() {
         let img: Tile = OUTPUT_IMAGE.parse().expect("failed to part want image");
-        // TODO(wathiede) Reorient img until you find a seamonster.
         dbg!(img.count_hashes());
         dbg!(seamonster().count_hashes());
-        assert_eq!(habitat(&reorient(&img, contains_seamonster)), 273);
+        assert_eq!(
+            habitat(
+                &reorient(&img, contains_seamonster).expect("couldn't find proper orientation")
+            ),
+            273
+        );
+    }
+    #[test]
+    fn test_stitch() {
+        let want: Tile = OUTPUT_IMAGE.parse().expect("can't parse stitched input");
+        let output = stitch(&generator(INPUT));
+
+        /*
+        let output = reorient(&output, |im| {
+        dbg!(&want, &im);
+        im == &want
+        })
+        .unwrap();
+        */
+        let output = reorient(&output, contains_seamonster);
+
+        match output {
+            None => assert!(false, "Failed to reorient stitched image to reference"),
+            Some(im) => {
+                dbg!(&im);
+                assert_eq!(
+                    habitat(&im),
+                    273,
+                    "\n  im {}\nwant {}",
+                    border_to_str(&im.pixels),
+                    border_to_str(&want.pixels)
+                );
+            }
+        }
     }
     #[test]
     fn test_solution2() {
