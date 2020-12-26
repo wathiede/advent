@@ -112,15 +112,23 @@ mod part1 {
         };
     }
 
-    fn parse_term(tokens: &mut VecDeque<Token>) -> u64 {
+    pub fn parse_expression(tokens: &mut VecDeque<Token>) -> u64 {
         let mut result = parse_item(tokens);
         let mut t = tokens[0];
         loop {
             match t {
-                Token::Mul | Token::Add => {
+                Token::Mul => {
                     tokens.pop_front();
                     let rhs = parse_item(tokens);
                     if let Token::Mul = t {
+                        result = result * rhs;
+                    }
+                    t = tokens[0];
+                }
+                Token::Add => {
+                    tokens.pop_front();
+                    let rhs = parse_item(tokens);
+                    if let Token::Add = t {
                         result = result + rhs;
                     }
                     t = tokens[0];
@@ -130,26 +138,8 @@ mod part1 {
         }
         result
     }
-
-    pub fn parse_expression(tokens: &mut VecDeque<Token>) -> u64 {
-        let mut result = parse_term(tokens);
-        let mut t = tokens[0];
-        loop {
-            match t {
-                Token::Mul | Token::Add => {
-                    tokens.pop_front();
-                    let rhs = parse_term(tokens);
-                    if let Token::Add = t {
-                        result = result * rhs;
-                    }
-                    t = tokens[0];
-                }
-                _ => break,
-            }
-        }
-        result
-    }
 }
+
 fn parse_part1(tokens: &[Token]) -> u64 {
     let mut vd: VecDeque<Token> = tokens.into_iter().cloned().collect();
     part1::parse_expression(&mut vd)
