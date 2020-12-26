@@ -128,6 +128,8 @@ struct TargetCup {
     idx: usize,
 }
 
+/// TODO(wathiede): redo based on this sentence from glenng:
+/// `So a circular linked list containing 2,1,3 would be [3,1,2]`
 #[derive(Debug)]
 struct FastHand {
     idx_to_val: Vec<usize>,
