@@ -36,6 +36,8 @@ use std::str::FromStr;
 
 use aoc_runner_derive::{aoc, aoc_generator};
 
+use crate::{debug_print, debug_println};
+
 struct Food {
     ingredients: Vec<String>,
     allergens: Vec<String>,
@@ -120,7 +122,7 @@ fn solution1(foods: &[Food]) -> usize {
 fn allergen_ingredients(foods: &[Food], non_allergens: &HashSet<String>) -> Vec<(String, String)> {
     let mut allergen_only = HashMap::new();
     foods.iter().for_each(|food| {
-        print!("{:?}:", food.allergens);
+        debug_print!("{:?}:", food.allergens);
         food.ingredients.iter().for_each(|i| {
             for a in &food.allergens {
                 let v = allergen_only
@@ -131,15 +133,15 @@ fn allergen_ingredients(foods: &[Food], non_allergens: &HashSet<String>) -> Vec<
                 *v += 1;
             }
             if !non_allergens.contains(i) {
-                print!(" {}", i);
+                debug_print!(" {}", i);
             }
         });
         food.ingredients.iter().for_each(|i| {
             if non_allergens.contains(i) {
-                print!(" *{}", i);
+                debug_print!(" *{}", i);
             }
         });
-        println!();
+        debug_println!();
     });
     let mut answer = HashMap::new();
     let mut limit = 0;
@@ -161,7 +163,7 @@ fn allergen_ingredients(foods: &[Food], non_allergens: &HashSet<String>) -> Vec<
                 rm = (a.to_string(), i.to_string());
             }
         });
-        println!("removing {:?}", rm);
+        debug_println!("removing {:?}", rm);
         allergen_only.iter_mut().for_each(|(_, i_counts)| {
             i_counts.remove(&rm.1);
         });
