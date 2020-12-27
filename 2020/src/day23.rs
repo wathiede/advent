@@ -85,7 +85,6 @@
 //! Determine which two cups will end up immediately clockwise of cup 1. What do you get if you multiply their labels together?
 
 use std::fmt;
-use std::ops::{Index, IndexMut, Range, RangeFrom};
 
 use aoc_runner_derive::aoc;
 
@@ -122,21 +121,34 @@ trait Hand {
     fn test_cur_to_end(&self) -> Vec<usize>;
 }
 
-#[derive(Debug)]
-struct TargetCup {
-    val: usize,
-    idx: usize,
-}
-
 /// TODO(wathiede): redo based on this sentence from glenng:
 /// `So a circular linked list containing 2,1,3 would be [3,1,2]`
 #[derive(Debug)]
 struct FastHand {
-    idx_to_val: Vec<usize>,
-    val_to_idx: Vec<usize>,
-    cur: usize,
+    // A cup labeled `1` will be represented by the index 0, in that cell will be the index of cup
+    // clockwise to `1`.
+    // Stores the next cup as indexed value (i.e. label-1).
+    cups: Vec<usize>,
+    cur: Cup,
     min: usize,
     max: usize,
+}
+
+/// Stores the label of a cup.  Use `as_idx` to compute the index into FastHand.cups. Use
+/// `from_idx` to build a `Cup` from a given index into FastHand.cups.
+#[derive(Copy, Clone, Debug, PartialEq)]
+struct Cup(usize);
+
+impl Cup {
+    fn new(val: usize) -> Cup {
+        Cup(val)
+    }
+    fn from_idx(idx: usize) -> Cup {
+        Cup(idx + 1)
+    }
+    fn as_idx(&self) -> usize {
+        self.0 - 1
+    }
 }
 
 impl FastHand {
@@ -144,16 +156,19 @@ impl FastHand {
         let data: Vec<_> = s.bytes().map(|s| (s - b'0') as usize).collect();
         let min = *data.iter().min().unwrap();
         let max = *data.iter().max().unwrap();
-        let mut idx_to_val = vec![0; data.len()];
-        let mut val_to_idx = vec![0; data.len()];
-        data.into_iter().enumerate().for_each(|(idx, val)| {
-            val_to_idx[val - 1] = idx;
-            idx_to_val[idx] = val;
+        let mut cups = vec![0; max];
+        let mut last = 0;
+        data.windows(2).for_each(|nums| {
+            let cur_cup = Cup::new(nums[0]);
+            let next_cup = Cup::new(nums[1]);
+            last = next_cup.as_idx();
+            cups[cur_cup.as_idx()] = next_cup.as_idx();
         });
+        let cur = Cup(data[0]);
+        cups[last] = cur.as_idx();
         FastHand {
-            idx_to_val,
-            val_to_idx,
-            cur: 0,
+            cups,
+            cur,
             min,
             max,
         }
@@ -164,148 +179,112 @@ impl FastHand {
         let mut max = *data.iter().max().unwrap();
         data.extend(max + 1..=1000000);
         max = 1000000;
-        let mut idx_to_val = vec![0; data.len()];
-        let mut val_to_idx = vec![0; data.len()];
-        data.into_iter().enumerate().for_each(|(idx, val)| {
-            val_to_idx[val - 1] = idx;
-            idx_to_val[idx] = val;
+        let mut cups = vec![0; max];
+        let mut last = 0;
+        data.windows(2).for_each(|nums| {
+            let cur_cup = Cup::new(nums[0]);
+            let next_cup = Cup::new(nums[1]);
+            last = next_cup.as_idx();
+            cups[cur_cup.as_idx()] = next_cup.as_idx();
         });
+        let cur = Cup(data[0]);
+        cups[last] = cur.as_idx();
         FastHand {
-            idx_to_val,
-            val_to_idx,
-            cur: 0,
+            cups,
+            cur,
             min,
             max,
         }
     }
 
-    fn destination_cup_idx(&self, skip_vals: &[usize]) -> usize {
-        let mut search_val = self.idx_to_val[self.cur] - 1;
+    fn destination(&self, skip_vals: &[Cup]) -> Cup {
+        let mut search_val = Cup::new(self.cur.0 - 1);
         while skip_vals.contains(&search_val) {
-            search_val -= 1;
+            search_val = Cup::new(search_val.0 - 1);
         }
-
-        if search_val < self.min {
-            search_val = self.max;
+        if search_val.0 < self.min {
+            search_val = Cup::new(self.max);
         }
         while skip_vals.contains(&search_val) {
-            search_val -= 1;
+            search_val = Cup::new(search_val.0 - 1);
         }
+        search_val
+    }
 
-        self.val_to_idx[search_val - 1]
+    fn next(&self, c: Cup) -> Cup {
+        //dbg!(c.as_idx(), self.cups[c.as_idx()]);
+        Cup::from_idx(self.cups[c.as_idx()])
     }
 }
 
 impl fmt::Display for FastHand {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for (idx, val) in self.idx_to_val.iter().enumerate() {
-            if idx == self.cur {
-                write!(f, "({}) ", val)?;
-            } else {
-                write!(f, "{} ", val)?;
-            };
+        let mut cur = self.cur;
+        write!(f, "({}) ", cur.0)?;
+
+        for _ in 1..self.cups.len() {
+            cur = Cup::from_idx(self.cups[cur.as_idx()]);
+            write!(f, "{} ", cur.0)?;
         }
         Ok(())
     }
 }
 
-#[derive(Debug)]
-struct CircleVec<T> {
-    data: Vec<T>,
-}
-
-impl<T> CircleVec<T> {
-    fn len(&self) -> usize {
-        self.data.len()
-    }
-    fn iter(&self) -> impl Iterator<Item = &T> {
-        self.data.iter()
-    }
-}
-
-// TODO(wathiede): Index<Range> and Index<RangeFrom>?
-impl<T> Index<usize> for CircleVec<T> {
-    type Output = T;
-
-    fn index(&self, index: usize) -> &Self::Output {
-        &self.data[index % self.data.len()]
-    }
-}
-
-impl<T> IndexMut<usize> for CircleVec<T> {
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        let len = self.data.len();
-        &mut self.data[index % len]
-    }
-}
-
 impl Hand for FastHand {
     fn step(&mut self) {
-        let n_cups = self.idx_to_val.len();
-        let right_idx = self.cur + 1;
-        let mut three = vec![0; 3];
-        (0..3).for_each(|dst| three[dst] = self.idx_to_val[(right_idx + dst) % n_cups]);
-        let dst_idx = self.destination_cup_idx(&three);
-
-        // TODO
+        let mut cur = self.cur;
+        let three: Vec<_> = (0..3)
+            .map(|_| {
+                cur = self.next(cur);
+                cur
+            })
+            .collect();
+        let dst = self.destination(&three);
         debug_println!(
-            "before {} three {:?} target {}",
+            "cur {} cups {} three {:?} destination {:?}",
+            self.cur.0,
             self,
             three,
-            self.idx_to_val[dst_idx]
+            dst
         );
+        debug_println!("cups (raw) {:?}", self.cups);
 
-        //dbg!(right, &dst);
-        let end_idx = if dst_idx < right_idx {
-            n_cups + dst_idx - 3 + 1
-        } else {
-            dst_idx + 1 - 3
-        };
-        debug_println!("moving window {}.. to {}..{}", dst_idx, right_idx, end_idx);
-        (right_idx..end_idx)
-            // Allow wrap around.
-            .zip((right_idx + 3..).chain(0..))
-            .for_each(|(dst_idx, src_idx)| {
-                let src_idx = src_idx % n_cups;
-                let dst_idx = dst_idx % n_cups;
-                let v = self.idx_to_val[src_idx];
-                debug_println!(
-                    "moving {}({}) -> {}({})",
-                    v,
-                    src_idx,
-                    self.idx_to_val[dst_idx],
-                    dst_idx
-                );
-                self.idx_to_val[dst_idx] = v;
-                self.val_to_idx[v - 1] = dst_idx;
-            });
-        (0..3).for_each(|i| {
-            let dst_idx = (end_idx + i) % n_cups;
-            self.idx_to_val[dst_idx] = three[i];
-            self.val_to_idx[three[i] - 1] = dst_idx;
-        });
-        self.cur = (self.cur + 1) % n_cups;
-        debug_println!(" after {}", self);
+        // Cur points to whatever end of three used to.
+        self.cups[self.cur.as_idx()] = self.cups[three[2].as_idx()];
+
+        // End of three points to whatever dst used to point to.
+        self.cups[three[2].as_idx()] = self.cups[dst.as_idx()];
+
+        // Dst points to the beginning of three.
+        self.cups[dst.as_idx()] = three[0].as_idx();
+
+        // Cur points to whatever is next in the circle.
+        self.cur = self.next(self.cur);
     }
     fn test_cur_to_end(&self) -> Vec<usize> {
-        self.idx_to_val[self.cur..]
-            .iter()
-            .chain(self.idx_to_val[..self.cur].iter())
-            .cloned()
-            .collect()
+        let mut res = Vec::with_capacity(self.cups.len());
+        let mut cur = self.cur;
+        (0..self.cups.len()).for_each(|_| {
+            res.push(cur.0);
+            cur = Cup::from_idx(self.cups[cur.as_idx()]);
+        });
+        res
     }
     fn part1_answer(&self) -> String {
-        let one_idx = self.val_to_idx[1 - 1];
-        let s = self.idx_to_val[one_idx + 1..]
-            .iter()
-            .fold("".to_string(), |acc, c| format!("{}{}", acc, c));
-        self.idx_to_val[..one_idx]
-            .iter()
-            .fold(s, |acc, c| format!("{}{}", acc, c))
+        let mut cur = Cup::new(1);
+        let mut s = "".to_string();
+        for _ in 1..self.cups.len() {
+            cur = self.next(cur);
+            s = format!("{}{}", s, cur.0);
+        }
+
+        s
     }
     fn part2_answer(&self) -> usize {
-        let one_idx = self.val_to_idx[1 - 1];
-        self.idx_to_val[one_idx + 1] * self.idx_to_val[one_idx + 2]
+        let one = Cup::new(1);
+        let v1 = self.next(one);
+        let v2 = self.next(v1);
+        v1.0 * v2.0
     }
 }
 
@@ -330,24 +309,11 @@ impl fmt::Display for SlowHand {
 }
 
 impl SlowHand {
+    #[allow(dead_code)]
     fn new(s: &str) -> SlowHand {
         let cups: Vec<_> = s.bytes().map(|s| (s - b'0') as usize).collect();
         let min = *cups.iter().min().unwrap();
         let max = *cups.iter().max().unwrap();
-        SlowHand {
-            cups,
-            cur: 0,
-            min,
-            max,
-        }
-    }
-
-    fn new_part2(s: &str) -> SlowHand {
-        let mut cups: Vec<_> = s.bytes().map(|s| (s - b'0') as usize).collect();
-        let min = *cups.iter().min().unwrap();
-        let mut max = *cups.iter().max().unwrap();
-        cups.extend(max + 1..1000000);
-        max = 1000000;
         SlowHand {
             cups,
             cur: 0,
@@ -421,7 +387,7 @@ impl Hand for SlowHand {
 
 #[aoc(day23, part1)]
 fn solution1(input: &str) -> String {
-    let mut hand = SlowHand::new(input);
+    let mut hand = FastHand::new(input);
     hand.play(100);
     hand.part1_answer()
 }
@@ -429,7 +395,6 @@ fn solution1(input: &str) -> String {
 #[aoc(day23, part2)]
 fn solution2(input: &str) -> usize {
     let mut hand = FastHand::new_part2(input);
-    //hand.play(1_000);
     hand.play(10_000_000);
     hand.part2_answer()
 }
@@ -460,13 +425,13 @@ mod tests {
     }
     #[test]
     fn slow_step() {
-        let mut hand = SlowHand::new(INPUT);
+        let hand = SlowHand::new(INPUT);
         test_hand(hand);
     }
 
     #[test]
     fn fast_step() {
-        let mut hand = FastHand::new(INPUT);
+        let hand = FastHand::new(INPUT);
         test_hand(hand);
     }
 
@@ -487,6 +452,8 @@ mod tests {
     fn part1() {
         assert_eq!(solution1(INPUT), "67384529");
     }
+    // This is too slow in debug mode due to debug_println, build in release to run.
+    #[cfg(not(debug_assertions))]
     #[test]
     fn part2() {
         assert_eq!(solution2("389125467"), 149245887792);

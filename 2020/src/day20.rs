@@ -332,7 +332,7 @@ impl Index<(usize, usize)> for Tile {
     }
 }
 
-#[cfg(debug_assertions)]
+#[cfg(any(debug_assertions, test))]
 fn border_to_str(border: &[u8]) -> String {
     std::str::from_utf8(border).unwrap().to_string()
 }
@@ -535,7 +535,7 @@ fn stitch(tiles: &[Tile]) -> Tile {
         })
     });
 
-    #[cfg(debug_assertions)]
+    #[cfg(any(debug_assertions, test))]
     border_counts.iter().for_each(|(b, c)| {
         let _ = b;
         let _ = c;
@@ -964,14 +964,6 @@ mod tests {
     fn test_stitch() {
         let want: Tile = OUTPUT_IMAGE.parse().expect("can't parse stitched input");
         let output = stitch(&generator(INPUT));
-
-        /*
-        let output = reorient(&output, |im| {
-        dbg!(&want, &im);
-        im == &want
-        })
-        .unwrap();
-        */
         let output = reorient(&output, contains_seamonster);
 
         match output {
