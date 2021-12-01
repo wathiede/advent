@@ -47,10 +47,35 @@ use aoc_runner_derive::{aoc, aoc_generator};
 /// non-number will result in a panice.
 #[aoc_generator(day1)]
 fn parse(input: &str) -> Vec<u32> {
-    Vec::new()
+    input
+        .split("\n")
+        .map(|s| s.parse().expect("not a number"))
+        .collect()
 }
 
 #[aoc(day1, part1)]
-fn find_pair_2020_linear(_: &[u32]) -> u32 {
-    todo!("part1")
+fn part1(depths: &[u32]) -> u32 {
+    depths
+        .windows(2)
+        .map(|s| if s[0] < s[1] { 1 } else { 0 })
+        .sum()
+}
+
+#[test]
+fn test_part1() {
+    assert_eq!(
+        part1(&parse(
+            r#"199
+200
+208
+210
+200
+207
+240
+269
+260
+263"#
+        )),
+        7
+    );
 }
