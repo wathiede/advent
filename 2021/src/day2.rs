@@ -52,49 +52,50 @@
 //!
 //! Using this new interpretation of the commands, calculate the horizontal position and depth you would have after following the planned course. What do you get if you multiply your final horizontal position by your final depth?
 
+use anyhow::Result;
 use aoc_runner_derive::{aoc, aoc_generator};
 
 #[aoc(day2, part1)]
-fn part1(input: &str) -> i32 {
+fn part1(input: &str) -> Result<i32> {
     let mut horizontal: i32 = 0;
     let mut depth: i32 = 0;
-    input.split("\n").for_each(|l| {
+    for l in input.split("\n") {
         let p: Vec<_> = l.split(" ").collect();
 
         match p[0] {
-            "forward" => horizontal += p[1].parse::<i32>().expect("forward"),
-            "up" => depth -= p[1].parse::<i32>().expect("up"),
-            "down" => depth += p[1].parse::<i32>().expect("down"),
+            "forward" => horizontal += p[1].parse::<i32>()?,
+            "up" => depth -= p[1].parse::<i32>()?,
+            "down" => depth += p[1].parse::<i32>()?,
             _ => panic!("unknown command {}", p[0]),
         }
-    });
-    horizontal * depth
+    }
+    Ok(horizontal * depth)
 }
 
 #[aoc(day2, part2)]
-fn part2(input: &str) -> i32 {
+fn part2(input: &str) -> Result<i32> {
     let mut horizontal: i32 = 0;
     let mut depth: i32 = 0;
     let mut aim: i32 = 0;
-    input.split("\n").for_each(|l| {
+    for l in input.split("\n") {
         let p: Vec<_> = l.split(" ").collect();
 
         match p[0] {
             "forward" => {
-                let v = p[1].parse::<i32>().expect("forward");
+                let v = p[1].parse::<i32>()?;
                 horizontal += v;
                 depth += v * aim;
             }
-            "up" => aim -= p[1].parse::<i32>().expect("up"),
-            "down" => aim += p[1].parse::<i32>().expect("down"),
+            "up" => aim -= p[1].parse::<i32>()?,
+            "down" => aim += p[1].parse::<i32>()?,
             _ => panic!("unknown command {}", p[0]),
         }
-    });
-    horizontal * depth
+    }
+    Ok(horizontal * depth)
 }
 
 #[test]
-fn test_part1() {
+fn test_part1() -> Result<()> {
     let input = r#"
 forward 5
 down 5
@@ -104,11 +105,12 @@ down 8
 forward 2
 "#
     .trim();
-    assert_eq!(part1(input), 150);
+    assert_eq!(part1(input)?, 150);
+    Ok(())
 }
 
 #[test]
-fn test_part2() {
+fn test_part2() -> Result<()> {
     let input = r#"
 forward 5
 down 5
@@ -118,5 +120,6 @@ down 8
 forward 2
 "#
     .trim();
-    assert_eq!(part2(input), 900);
+    assert_eq!(part2(input)?, 900);
+    Ok(())
 }
