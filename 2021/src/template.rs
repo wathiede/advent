@@ -1,3 +1,5 @@
+use aoc_runner_derive::{aoc, aoc_generator};
+
 #[aoc_generator(dayX)]
 fn parse(input: &str) -> Vec<u32> {
     todo!("parse")
