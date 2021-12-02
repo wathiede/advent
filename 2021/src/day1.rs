@@ -73,36 +73,34 @@
 //!
 //! Consider sums of a three-measurement sliding window. How many sums are larger than the previous sum?
 
+use anyhow::Result;
 use aoc_runner_derive::{aoc, aoc_generator};
 
-/// Reads text file containing one integer per line, and parses them into `Vec<u32>`.  Any
-/// non-number will result in a panice.
+/// Reads text file containing one integer per line, and parses them into `Vec<u32>`.  
 #[aoc_generator(day1)]
-fn parse(input: &str) -> Vec<u32> {
-    input
-        .split("\n")
-        .map(|s| s.parse().expect("not a number"))
-        .collect()
+fn parse(input: &str) -> Result<Vec<u32>> {
+    input.split("\n").map(|s| Ok(s.parse()?)).collect()
 }
 
 #[aoc(day1, part1)]
-fn part1(depths: &[u32]) -> u32 {
-    depths
+fn part1(depths: &[u32]) -> Result<u32> {
+    Ok(depths
         .windows(2)
         .map(|s| if s[0] < s[1] { 1 } else { 0 })
-        .sum()
+        .sum())
 }
 
 #[aoc(day1, part2)]
-fn part2(depths: &[u32]) -> u32 {
+fn part2(depths: &[u32]) -> Result<u32> {
     let sums: Vec<u32> = depths.windows(3).map(|s| s.iter().sum()).collect();
-    sums.windows(2)
+    Ok(sums
+        .windows(2)
         .map(|s| if s[0] < s[1] { 1 } else { 0 })
-        .sum()
+        .sum())
 }
 
 #[test]
-fn test_part1() {
+fn test_part1() -> Result<()> {
     assert_eq!(
         part1(&parse(
             r#"199
@@ -115,13 +113,14 @@ fn test_part1() {
 269
 260
 263"#
-        )),
+        )?)?,
         7
     );
+    Ok(())
 }
 
 #[test]
-fn test_part2() {
+fn test_part2() -> Result<()> {
     assert_eq!(
         part2(&parse(
             r#"199
@@ -134,7 +133,8 @@ fn test_part2() {
 269
 260
 263"#
-        )),
+        )?)?,
         5
     );
+    Ok(())
 }
