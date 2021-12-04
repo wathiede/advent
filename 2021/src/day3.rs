@@ -30,6 +30,40 @@
 //! The epsilon rate is calculated in a similar way; rather than use the most common bit, the least common bit from each position is used. So, the epsilon rate is 01001, or 9 in decimal. Multiplying the gamma rate (22) by the epsilon rate (9) produces the power consumption, 198.
 //!
 //! Use the binary numbers in your diagnostic report to calculate the gamma rate and epsilon rate, then multiply them together. What is the power consumption of the submarine? (Be sure to represent your answer in decimal, not binary.)
+//!
+//! --- Part Two ---
+//! Next, you should verify the life support rating, which can be determined by multiplying the oxygen generator rating by the CO2 scrubber rating.
+//!
+//! Both the oxygen generator rating and the CO2 scrubber rating are values that can be found in your diagnostic report - finding them is the tricky part. Both values are located using a similar process that involves filtering out values until only one remains. Before searching for either rating value, start with the full list of binary numbers from your diagnostic report and consider just the first bit of those numbers. Then:
+//!
+//! Keep only numbers selected by the bit criteria for the type of rating value for which you are searching. Discard numbers which do not match the bit criteria.
+//! If you only have one number left, stop; this is the rating value for which you are searching.
+//! Otherwise, repeat the process, considering the next bit to the right.
+//! The bit criteria depends on which type of rating value you want to find:
+//!
+//! To find oxygen generator rating, determine the most common value (0 or 1) in the current bit position, and keep only numbers with that bit in that position. If 0 and 1 are equally common, keep values with a 1 in the position being considered.
+//! To find CO2 scrubber rating, determine the least common value (0 or 1) in the current bit position, and keep only numbers with that bit in that position. If 0 and 1 are equally common, keep values with a 0 in the position being considered.
+//! For example, to determine the oxygen generator rating value using the same example diagnostic report from above:
+//!
+//! Start with all 12 numbers and consider only the first bit of each number. There are more 1 bits (7) than 0 bits (5), so keep only the 7 numbers with a 1 in the first position: 11110, 10110, 10111, 10101, 11100, 10000, and 11001.
+//! Then, consider the second bit of the 7 remaining numbers: there are more 0 bits (4) than 1 bits (3), so keep only the 4 numbers with a 0 in the second position: 10110, 10111, 10101, and 10000.
+//! In the third position, three of the four numbers have a 1, so keep those three: 10110, 10111, and 10101.
+//! In the fourth position, two of the three numbers have a 1, so keep those two: 10110 and 10111.
+//! In the fifth position, there are an equal number of 0 bits and 1 bits (one each). So, to find the oxygen generator rating, keep the number with a 1 in that position: 10111.
+//! As there is only one number left, stop; the oxygen generator rating is 10111, or 23 in decimal.
+//! Then, to determine the CO2 scrubber rating value from the same example above:
+//!
+//! Start again with all 12 numbers and consider only the first bit of each number. There are fewer 0 bits (5) than 1 bits (7), so keep only the 5 numbers with a 0 in the first position: 00100, 01111, 00111, 00010, and 01010.
+//! Then, consider the second bit of the 5 remaining numbers: there are fewer 1 bits (2) than 0 bits (3), so keep only the 2 numbers with a 1 in the second position: 01111 and 01010.
+//! In the third position, there are an equal number of 0 bits and 1 bits (one each). So, to find the CO2 scrubber rating, keep the number with a 0 in that position: 01010.
+//! As there is only one number left, stop; the CO2 scrubber rating is 01010, or 10 in decimal.
+//! Finally, to find the life support rating, multiply the oxygen generator rating (23) by the CO2 scrubber rating (10) to get 230.
+//!
+//! Use the binary numbers in your diagnostic report to calculate the oxygen generator rating and CO2 scrubber rating, then multiply them together. What is the life support rating of the submarine? (Be sure to represent your answer in decimal, not binary.)
+
+use std::fmt::Debug;
+use std::fmt::Error;
+use std::fmt::Formatter;
 
 use anyhow::Result;
 use aoc_runner_derive::aoc;
@@ -58,13 +92,74 @@ fn part1(input: &str) -> Result<u64> {
     Ok(epsilon * gamma)
 }
 
-/*
-#[aoc(day3, part2)]
-fn part2(depths: &[u32]) -> Result<u32> {
-todo!("part2")
-Ok(())
+fn oxygen(nums: &[u64], num_bits: usize) -> u64 {
+    partition(nums, num_bits - 1, Partition::Oxygen)
 }
-*/
+
+fn co2(nums: &[u64], num_bits: usize) -> u64 {
+    partition(nums, num_bits - 1, Partition::CO2)
+}
+
+#[derive(Copy, Clone, Debug)]
+enum Partition {
+    Oxygen,
+    CO2,
+}
+
+struct Binaries<'a>(&'a [u64]);
+impl<'a> Debug for Binaries<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        write!(f, "[\n")?;
+        for n in self.0.iter() {
+            write!(f, "  0b{:08b},\n", n)?;
+        }
+        write!(f, "]\n")?;
+        Ok(())
+    }
+}
+
+fn partition(nums: &[u64], bit_offset: usize, partition_type: Partition) -> u64 {
+    let (one, zero): (Vec<u64>, Vec<u64>) =
+        nums.iter().partition(|n| (*n & (1 << bit_offset)) != 0);
+
+    let remainder = match partition_type {
+        Partition::Oxygen => {
+            if one.len() == zero.len() {
+                one
+            } else if one.len() > zero.len() {
+                one
+            } else {
+                zero
+            }
+        }
+        Partition::CO2 => {
+            if one.len() == zero.len() {
+                zero
+            } else if one.len() > zero.len() {
+                zero
+            } else {
+                one
+            }
+        }
+    };
+    if remainder.len() == 1 {
+        return remainder[0];
+    }
+    partition(&remainder, bit_offset - 1, partition_type)
+}
+
+#[aoc(day3, part2)]
+fn part2(input: &str) -> Result<u64> {
+    let lines: Vec<_> = input.trim().split("\n").collect();
+    let nums: Vec<_> = lines
+        .iter()
+        .map(|s| u64::from_str_radix(s, 2))
+        .collect::<Result<_, std::num::ParseIntError>>()?;
+    let num_bits = lines[0].chars().count();
+    let o = oxygen(&nums, num_bits);
+    let c = co2(&nums, num_bits);
+    Ok(o * c)
+}
 
 #[test]
 fn test_part1() -> Result<()> {
@@ -87,13 +182,23 @@ fn test_part1() -> Result<()> {
     Ok(())
 }
 
-/*
 #[test]
-fn test_part2()->Result<()> {
-let input = r#"
+fn test_part2() -> Result<()> {
+    let input = r#"
+00100
+11110
+10110
+10111
+10101
+01111
+00111
+11100
+10000
+11001
+00010
+01010
 "#
-.trim();
-assert_eq!(part2(&parse(input)?)?, TODO);
-Ok(())
+    .trim();
+    assert_eq!(part2(input)?, 230);
+    Ok(())
 }
-*/
