@@ -21,22 +21,27 @@ fn part2(depths: &[u32]) -> Result<u32> {
 }
 */
 
-#[test]
-fn test_part1() -> Result<()> {
-    let input = r#"
-"#
-    .trim();
-    assert_eq!(part1(&parse(input)?)?, TODO);
-    Ok(())
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-/*
-#[test]
-fn test_part2()->Result<()> {
-    let input = r#"
+    #[test]
+    fn test_part1() -> Result<()> {
+        let input = r#"
 "#
-    .trim();
-    assert_eq!(part2(&parse(input)?)?, TODO);
-Ok(())
+        .trim();
+        assert_eq!(part1(&parse(input)?)?, TODO);
+        Ok(())
+    }
+
+    /*
+    #[test]
+    fn test_part2()->Result<()> {
+        let input = r#"
+    "#
+        .trim();
+        assert_eq!(part2(&parse(input)?)?, TODO);
+    Ok(())
+    }
+    */
 }
-*/
