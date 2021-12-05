@@ -53,7 +53,7 @@
 //! Using this new interpretation of the commands, calculate the horizontal position and depth you would have after following the planned course. What do you get if you multiply your final horizontal position by your final depth?
 
 use anyhow::Result;
-use aoc_runner_derive::{aoc, aoc_generator};
+use aoc_runner_derive::aoc;
 
 #[aoc(day2, part1)]
 fn part1(input: &str) -> Result<i32> {
