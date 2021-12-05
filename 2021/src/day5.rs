@@ -105,11 +105,11 @@ impl FromStr for Line {
     type Err = LineError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut it = s.split(" ");
+        let mut it = s.split(' ');
         let parse_point = |it: &mut dyn Iterator<Item = &str>| -> Result<Point, LineError> {
             let p = it.next().ok_or(LineError::PrematureEOL)?;
             let nums: Vec<_> = p
-                .split(",")
+                .split(',')
                 .map(|n| n.parse())
                 .collect::<Result<_, ParseIntError>>()?;
             Ok(Point {
@@ -178,7 +178,7 @@ impl Debug for Image {
 #[aoc_generator(day5)]
 fn parse(input: &str) -> Result<Vec<Line>> {
     Ok(input
-        .split("\n")
+        .split('\n')
         .map(|l| l.parse())
         .collect::<Result<_, LineError>>()?)
 }

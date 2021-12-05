@@ -61,16 +61,14 @@
 //!
 //! Use the binary numbers in your diagnostic report to calculate the oxygen generator rating and CO2 scrubber rating, then multiply them together. What is the life support rating of the submarine? (Be sure to represent your answer in decimal, not binary.)
 
-use std::fmt::Debug;
-use std::fmt::Error;
-use std::fmt::Formatter;
+use std::fmt::{Debug, Error, Formatter};
 
 use anyhow::Result;
 use aoc_runner_derive::aoc;
 
 #[aoc(day3, part1)]
 fn part1(input: &str) -> Result<u64> {
-    let lines: Vec<_> = input.trim().split("\n").collect();
+    let lines: Vec<_> = input.trim().split('\n').collect();
     let num_bits = lines[0].len();
     let majority = lines.len() / 2;
     let mut bits = vec![0; num_bits];
@@ -109,11 +107,11 @@ enum Partition {
 struct Binaries<'a>(&'a [u64]);
 impl<'a> Debug for Binaries<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
-        write!(f, "[\n")?;
+        writeln!(f, "[")?;
         for n in self.0.iter() {
-            write!(f, "  0b{:08b},\n", n)?;
+            writeln!(f, "  0b{:08b},", n)?;
         }
-        write!(f, "]\n")?;
+        writeln!(f, "]")?;
         Ok(())
     }
 }
@@ -124,18 +122,14 @@ fn partition(nums: &[u64], bit_offset: usize, partition_type: Partition) -> u64 
 
     let remainder = match partition_type {
         Partition::Oxygen => {
-            if one.len() == zero.len() {
-                one
-            } else if one.len() > zero.len() {
+            if one.len() >= zero.len() {
                 one
             } else {
                 zero
             }
         }
         Partition::CO2 => {
-            if one.len() == zero.len() {
-                zero
-            } else if one.len() > zero.len() {
+            if one.len() >= zero.len() {
                 zero
             } else {
                 one
@@ -150,7 +144,7 @@ fn partition(nums: &[u64], bit_offset: usize, partition_type: Partition) -> u64 
 
 #[aoc(day3, part2)]
 fn part2(input: &str) -> Result<u64> {
-    let lines: Vec<_> = input.trim().split("\n").collect();
+    let lines: Vec<_> = input.trim().split('\n').collect();
     let nums: Vec<_> = lines
         .iter()
         .map(|s| u64::from_str_radix(s, 2))

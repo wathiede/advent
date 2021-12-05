@@ -79,7 +79,7 @@ use aoc_runner_derive::{aoc, aoc_generator};
 /// Reads text file containing one integer per line, and parses them into `Vec<u32>`.  
 #[aoc_generator(day1)]
 fn parse(input: &str) -> Result<Vec<u32>> {
-    input.split("\n").map(|s| Ok(s.parse()?)).collect()
+    input.split('\n').map(|s| Ok(s.parse()?)).collect()
 }
 
 #[aoc(day1, part1)]

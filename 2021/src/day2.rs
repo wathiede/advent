@@ -59,8 +59,8 @@ use aoc_runner_derive::aoc;
 fn part1(input: &str) -> Result<i32> {
     let mut horizontal: i32 = 0;
     let mut depth: i32 = 0;
-    for l in input.split("\n") {
-        let p: Vec<_> = l.split(" ").collect();
+    for l in input.split('\n') {
+        let p: Vec<_> = l.split(' ').collect();
 
         match p[0] {
             "forward" => horizontal += p[1].parse::<i32>()?,
@@ -77,8 +77,8 @@ fn part2(input: &str) -> Result<i32> {
     let mut horizontal: i32 = 0;
     let mut depth: i32 = 0;
     let mut aim: i32 = 0;
-    for l in input.split("\n") {
-        let p: Vec<_> = l.split(" ").collect();
+    for l in input.split('\n') {
+        let p: Vec<_> = l.split(' ').collect();
 
         match p[0] {
             "forward" => {

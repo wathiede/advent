@@ -87,8 +87,6 @@ enum GameError {
     ParseIntError(#[from] ParseIntError),
     #[error("couldn't parse board {0}")]
     BoardError(#[from] BoardError),
-    #[error("unknown")]
-    Unknown,
 }
 
 impl Game {
@@ -130,7 +128,7 @@ impl FromStr for Game {
         let numbers = it
             .next()
             .unwrap()
-            .split(",")
+            .split(',')
             .map(|s| s.parse())
             .collect::<Result<_, ParseIntError>>()?;
         let boards: Vec<_> = it.map(|s| s.parse()).collect::<Result<_, BoardError>>()?;
@@ -152,8 +150,6 @@ struct Board {
 enum BoardError {
     #[error("couldn't parse number {0}")]
     ParseIntError(#[from] ParseIntError),
-    #[error("unknown")]
-    Unknown,
 }
 
 impl Board {
@@ -206,7 +202,7 @@ impl Debug for Board {
                     write!(f, "{:3}", self.numbers[&(x, y)])?;
                 }
             }
-            writeln!(f, "")?;
+            writeln!(f)?;
         }
         Ok(())
     }
@@ -217,11 +213,11 @@ impl FromStr for Board {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let numbers: Vec<Vec<_>> = s
-            .split("\n")
+            .split('\n')
             .map(|l| {
-                l.split(" ")
+                l.split(' ')
                     // Remove the double space that happens before single digit cells.
-                    .filter(|c| *c != "")
+                    .filter(|c| !c.is_empty())
                     .map(|c| c.parse())
                     .collect::<Result<_, ParseIntError>>()
             })
