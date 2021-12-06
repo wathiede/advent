@@ -80,7 +80,7 @@ fn part1(input: &str) -> Result<usize> {
 
 #[aoc(day6, part2)]
 fn part2(input: &str) -> Result<usize> {
-    let mut counts = vec![0; 9];
+    let mut counts = [0; 9];
     input
         .split(',')
         .map(|s| s.parse())
@@ -88,7 +88,7 @@ fn part2(input: &str) -> Result<usize> {
         .into_iter()
         .for_each(|n| counts[n] += 1);
     for _ in 0..256 {
-        let mut tmp = vec![0; 9];
+        let mut tmp = [0; 9];
         for i in 0..9 {
             if i == 0 {
                 tmp[6] += counts[0];
