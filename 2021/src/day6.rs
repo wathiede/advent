@@ -47,6 +47,11 @@
 //! In this example, after 18 days, there are a total of 26 fish. After 80 days, there would be a total of 5934.
 //!
 //! Find a way to simulate lanternfish. How many lanternfish would there be after 80 days?
+//!
+//! --- Part Two ---
+//! Suppose the lanternfish live forever and have unlimited food and space. Would they take over the entire ocean?
+//!
+//! After 256 days in the example above, there would be a total of 26984457539 lanternfish!
 
 use std::num::ParseIntError;
 
@@ -73,13 +78,29 @@ fn part1(input: &str) -> Result<usize> {
     Ok(fish.len())
 }
 
-/*
 #[aoc(day6, part2)]
-fn part2(depths: &[u64]) -> Result<u64> {
-todo!("part2")
-Ok(())
+fn part2(input: &str) -> Result<usize> {
+    let mut counts = vec![0; 9];
+    input
+        .split(',')
+        .map(|s| s.parse())
+        .collect::<Result<Vec<usize>, ParseIntError>>()?
+        .into_iter()
+        .for_each(|n| counts[n] += 1);
+    for _ in 0..256 {
+        let mut tmp = vec![0; 9];
+        for i in 0..9 {
+            if i == 0 {
+                tmp[6] += counts[0];
+                tmp[8] += counts[0];
+            } else {
+                tmp[i - 1] += counts[i];
+            }
+        }
+        counts = tmp;
+    }
+    Ok(counts.iter().sum())
 }
-*/
 
 #[cfg(test)]
 mod tests {
@@ -92,14 +113,10 @@ mod tests {
         Ok(())
     }
 
-    /*
     #[test]
-    fn test_part2()->Result<()> {
-    let input = r#"
-    "#
-    .trim();
-    assert_eq!(part2(&parse(input)?)?, u64::MAX);
-    Ok(())
+    fn test_part2() -> Result<()> {
+        let input = r#"3,4,3,1,2"#.trim();
+        assert_eq!(part2(input)?, 26984457539);
+        Ok(())
     }
-    */
 }
