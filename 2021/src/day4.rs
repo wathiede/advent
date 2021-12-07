@@ -141,9 +141,24 @@ impl FromStr for Game {
 }
 
 #[derive(Default)]
+struct MarkerBoard(u32);
+
+impl MarkerBoard {
+    fn mark(&mut self, (x, y): (usize, usize)) {
+        let bit = 1 << (x + y * 5);
+        self.0 |= bit;
+    }
+
+    fn is_marked(&self, (x, y): (usize, usize)) -> bool {
+        let bit = 1 << (x + y * 5);
+        (self.0 & bit) != 0
+    }
+}
+
+#[derive(Default)]
 struct Board {
     numbers: HashMap<(usize, usize), u64>,
-    marked: HashSet<(usize, usize)>,
+    marked: MarkerBoard,
 }
 
 #[derive(Debug, Error)]
@@ -155,12 +170,12 @@ enum BoardError {
 impl Board {
     fn is_bingo(&self) -> bool {
         for y in 0..5 {
-            if (0..5).all(|x| self.marked.contains(&(x, y))) {
+            if (0..5).all(|x| self.marked.is_marked((x, y))) {
                 return true;
             }
         }
         for x in 0..5 {
-            if (0..5).all(|y| self.marked.contains(&(x, y))) {
+            if (0..5).all(|y| self.marked.is_marked((x, y))) {
                 return true;
             }
         }
@@ -170,7 +185,7 @@ impl Board {
         self.numbers
             .iter()
             .map(|((x, y), v)| {
-                if !self.marked.contains(&(*x, *y)) {
+                if !self.marked.is_marked((*x, *y)) {
                     *v
                 } else {
                     0
@@ -182,7 +197,7 @@ impl Board {
     fn mark(&mut self, num: u64) -> bool {
         for ((x, y), v) in self.numbers.iter() {
             if *v == num {
-                self.marked.insert((*x, *y));
+                self.marked.mark((*x, *y));
                 return true;
             }
         }
@@ -195,7 +210,7 @@ impl Debug for Board {
         writeln!(f)?;
         for y in 0..5 {
             for x in 0..5 {
-                if self.marked.contains(&(x, y)) {
+                if self.marked.is_marked((x, y)) {
                     let v = format!("{:3}", self.numbers[&(x, y)]);
                     write!(f, "{}", Green.bold().paint(v))?;
                 } else {
