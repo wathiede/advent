@@ -23,9 +23,9 @@ fn part1(input: &[u64]) -> Result<u64> {
 
 /*
 #[aoc(dayX, part2)]
-fn part2(depths: &[u64]) -> Result<u64> {
-    todo!("part2")
-    Ok(())
+fn part2(input: &[u64]) -> Result<u64> {
+    todo!("part2");
+    Ok(0)
 }
 */
 
