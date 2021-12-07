@@ -88,10 +88,16 @@ fn part2(input: &str) -> Result<usize> {
         .into_iter()
         .for_each(|n| counts[n] += 1);
     for _ in 0..256 {
-        let ready = counts[0];
-        counts.rotate_left(1);
-        counts[6] += ready;
-        counts[8] = ready;
+        let mut tmp = [0; 9];
+        for (i, c) in counts.iter().enumerate() {
+            if i == 0 {
+                tmp[6] = *c;
+                tmp[8] = *c;
+            } else {
+                tmp[i - 1] += *c;
+            }
+        }
+        counts = tmp;
     }
     Ok(counts.iter().sum())
 }
