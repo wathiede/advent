@@ -153,6 +153,26 @@ impl MarkerBoard {
         let bit = 1 << (x + y * 5);
         (self.0 & bit) != 0
     }
+
+    fn is_bingo(&self) -> bool {
+        let h = 0b11111;
+        let v = 0b00001_00001_00001_00001_00001;
+        let m = self.0;
+
+        // Bingo horizontally
+        false
+            || (m & h == h)
+            || ((m >> 5 & h) == h)
+            || ((m >> 10 & h) == h)
+            || ((m >> 15 & h) == h)
+            || ((m >> 20 & h) == h)
+        // Bingo vertically
+            || ((m & v) == v)
+            || ((m >> 1 & v) == v)
+            || ((m >> 2 & v) == v)
+            || ((m >> 3 & v) == v)
+            || ((m >> 4 & v) == v)
+    }
 }
 
 #[derive(Default)]
@@ -169,17 +189,7 @@ enum BoardError {
 
 impl Board {
     fn is_bingo(&self) -> bool {
-        for y in 0..5 {
-            if (0..5).all(|x| self.marked.is_marked((x, y))) {
-                return true;
-            }
-        }
-        for x in 0..5 {
-            if (0..5).all(|y| self.marked.is_marked((x, y))) {
-                return true;
-            }
-        }
-        false
+        self.marked.is_bingo()
     }
     fn sum_uncovered(&self) -> u64 {
         self.numbers
