@@ -265,7 +265,7 @@ fn part1(input: &str) -> Result<u64> {
     let numbers = g.numbers.clone();
     for n in numbers {
         if let Some(b) = g.apply_number(n) {
-            println!("winning board {:?}", b);
+            //println!("winning board {:?}", b);
             return Ok(n as u64 * b.sum_uncovered());
         }
     }
@@ -278,7 +278,7 @@ fn part2(input: &str) -> Result<u64> {
     let numbers = g.numbers.clone();
     for n in numbers {
         if let Some(b) = g.apply_number_part2(n) {
-            println!("winning board {:?}", b);
+            //println!("winning board {:?}", b);
             return Ok(n as u64 * b.sum_uncovered());
         }
     }
