@@ -156,6 +156,7 @@ impl MarkerBoard {
 
     fn is_bingo(&self) -> bool {
         let h = 0b11111;
+        #[allow(clippy::unusual_byte_groupings)]
         let v = 0b00001_00001_00001_00001_00001;
         let m = self.0;
 

@@ -87,7 +87,7 @@ fn score2(nums: &[u64], mid: u64) -> u64 {
 
 #[aoc(day7, part2)]
 fn part2(input: &[u64]) -> Result<u64> {
-    let mut input: Vec<_> = input.to_vec();
+    let input: Vec<_> = input.to_vec();
     let avg = input.iter().sum::<u64>() / input.len() as u64;
 
     let s = if avg > 10 { avg - 10 } else { 0 };
