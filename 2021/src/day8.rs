@@ -66,17 +66,60 @@
 //!
 //! In the output values, how many times do digits 1, 4, 7, or 8 appear?
 //!
-
-use std::{
-    fmt::{Debug, Error, Formatter},
-    num::ParseIntError,
-    ops::{Index, IndexMut},
-    str::FromStr,
-};
+//! --- Part Two ---
+//! Through a little deduction, you should now be able to determine the remaining digits. Consider again the first example above:
+//!
+//! acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab |
+//! cdfeb fcadb cdfeb cdbaf
+//! After some careful analysis, the mapping between signal wires and segments only make sense in the following configuration:
+//!
+//!  dddd
+//! e    a
+//! e    a
+//!  ffff
+//! g    b
+//! g    b
+//!  cccc
+//! So, the unique signal patterns would correspond to the following digits:
+//!
+//! acedgfb: 8
+//! cdfbe: 5
+//! gcdfa: 2
+//! fbcad: 3
+//! dab: 7
+//! cefabd: 9
+//! cdfgeb: 6
+//! eafb: 4
+//! cagedb: 0
+//! ab: 1
+//! Then, the four digits of the output value can be decoded:
+//!
+//! cdfeb: 5
+//! fcadb: 3
+//! cdfeb: 5
+//! cdbaf: 3
+//! Therefore, the output value for this entry is 5353.
+//!
+//! Following this same process for each entry in the second, larger example above, the output value of each entry can be determined:
+//!
+//! fdgacbe cefdb cefbgd gcbe: 8394
+//! fcgedb cgb dgebacf gc: 9781
+//! cg cg fdcagb cbg: 1197
+//! efabcd cedba gadfec cb: 9361
+//! gecf egdcabf bgf bfgea: 4873
+//! gebdcfa ecba ca fadegcb: 8418
+//! cefg dcbef fcge gbcadfe: 4548
+//! ed bcgafe cdgba cbgef: 1625
+//! gbdfcae bgc cg cgb: 8717
+//! fgae cfgab fg bagce: 4315
+//! Adding all of the output values in this larger example produces 61229.
+//!
+//! For each entry, determine all of the wire/segment connections and decode the four-digit output values. What do you get if you add up all of the output values?
+//!
+use std::collections::{HashMap, HashSet};
 
 use anyhow::Result;
-use aoc_runner_derive::{aoc, aoc_generator};
-use thiserror::Error;
+use aoc_runner_derive::aoc;
 
 #[aoc(day8, part1)]
 fn part1(input: &str) -> Result<usize> {
@@ -87,29 +130,102 @@ fn part1(input: &str) -> Result<usize> {
                 .unwrap()
                 .1
                 .split(' ')
-                .filter(|s| match s.len() {
-                    // 1
-                    2 => true,
-                    // 7
-                    3 => true,
-                    // 4
-                    4 => true,
-                    // 8
-                    7 => true,
-                    _ => false,
-                })
+                // 1 | 7 | 4 | 8
+                .filter(|s| matches!(s.len(), 2 | 3 | 4 | 7))
                 .count()
         })
         .sum())
 }
 
-/*
-#[aoc(day8, part2)]
-fn part2(input: &[u64]) -> Result<u64> {
-    todo!("part2");
-    Ok(0)
+fn build_lookup(input: &str) -> Result<HashMap<String, &str>> {
+    let mut map = HashMap::new();
+    let set: HashSet<_> = input.split(' ').collect();
+    for digit in input.split(' ') {
+        match digit.len() {
+            // 1
+            2 => map.insert("1", digit),
+            // 7
+            3 => map.insert("7", digit),
+            // 4
+            4 => map.insert("4", digit),
+            // 8
+            7 => map.insert("8", digit),
+            _ => None,
+        };
+    }
+    let one: HashSet<_> = map["1"].chars().collect();
+    let four: HashSet<_> = map["4"].chars().collect();
+
+    // 0, 6 or 9 have 6 segments:
+    // 9 contains 1 and 4
+    // 0 intersects w/ 1 but not w/ 4
+    // 6 is the left overs.
+    set.iter().filter(|s| s.len() == 6).for_each(|d| {
+        let s: HashSet<_> = d.chars().collect();
+        let one_int: HashSet<_> = s.intersection(&one).cloned().collect();
+        let four_int: HashSet<_> = s.intersection(&four).cloned().collect();
+        if one_int == one && four_int == four {
+            map.insert("9", d);
+        } else if one_int == one {
+            map.insert("0", d);
+        } else {
+            map.insert("6", d);
+        }
+    });
+
+    let nine: HashSet<_> = map["9"].chars().collect();
+    // 2, 3 and 5 have 5 segments:
+    // 3 has overlap w/ 1
+    // 5 is a subset of 9
+    // 2 is the left overs.
+    set.iter().filter(|s| s.len() == 5).for_each(|d| {
+        let s: HashSet<_> = d.chars().collect();
+        let one_int: HashSet<_> = s.intersection(&one).cloned().collect();
+        let nine_int: HashSet<_> = s.intersection(&nine).cloned().collect();
+        if one_int == one {
+            map.insert("3", d);
+        } else if nine_int == s {
+            map.insert("5", d);
+        } else {
+            map.insert("2", d);
+        }
+    });
+
+    // Sort value for use as key, and swap key/value.
+    Ok(map
+        .iter()
+        .map(|(&k, v)| {
+            let mut v: Vec<_> = v.chars().collect();
+            v.sort_unstable();
+            (v.iter().collect(), k)
+        })
+        .collect())
 }
-*/
+
+fn output(line: &str) -> Result<u64> {
+    let (inp, out) = line.split_once(" | ").expect("line missing |");
+    let lookup = build_lookup(inp)?;
+    Ok(out
+        .split(' ')
+        .map(|s| {
+            // Sort letters in string before looking up.
+            let mut s: Vec<_> = s.chars().collect();
+            s.sort_unstable();
+            let s: String = s.iter().collect();
+            lookup[&s]
+        })
+        .collect::<Vec<_>>()
+        .join("")
+        .parse()?)
+}
+
+#[aoc(day8, part2)]
+fn part2(input: &str) -> Result<u64> {
+    Ok(input
+        .lines()
+        .map(|l| output(l).expect("couldn't parse line"))
+        .sum())
+}
 
 #[cfg(test)]
 mod tests {
@@ -134,14 +250,22 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
         Ok(())
     }
 
-    /*
     #[test]
-    fn test_part2()->Result<()> {
+    fn test_part2() -> Result<()> {
         let input = r#"
+be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe
+edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc
+fgaebd cg bdaec gdafb agbcfd gdcbef bgcad gfac gcb cdgabef | cg cg fdcagb cbg
+fbegcd cbd adcefb dageb afcb bc aefdc ecdab fgdeca fcdbega | efabcd cedba gadfec cb
+aecbfdg fbg gf bafeg dbefa fcge gcbea fcaegb dgceab fcbdga | gecf egdcabf bgf bfgea
+fgeab ca afcebg bdacfeg cfaedg gcfdb baec bfadeg bafgc acf | gebdcfa ecba ca fadegcb
+dbcfg fgd bdegcaf fgec aegbdf ecdfab fbedc dacgb gdcebf gf | cefg dcbef fcge gbcadfe
+bdfegc cbegaf gecbf dfcage bdacg ed bedf ced adcbefg gebcd | ed bcgafe cdgba cbgef
+egadfb cdbfeg cegd fecab cgb gbdefca cg fgcdab egfdb bfceg | gbdfcae bgc cg cgb
+gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
     "#
         .trim();
-        assert_eq!(part2(&parse(input)?)?, u64::MAX);
-    Ok(())
+        assert_eq!(part2(input)?, 61229);
+        Ok(())
     }
-    */
 }
