@@ -20,9 +20,47 @@
 //!
 //! Find all of the low points on your heightmap. What is the sum of the risk levels of all low points on your heightmap?
 //!
+//! --- Part Two ---
+//! Next, you need to find the largest basins so you know what areas are most important to avoid.
 //!
+//! A basin is all locations that eventually flow downward to a single low point. Therefore, every low point has a basin, although some basins are very small. Locations of height 9 do not count as being in any basin, and all other locations will always be part of exactly one basin.
+//!
+//! The size of a basin is the number of locations within the basin, including the low point. The example above has four basins.
+//!
+//! The top-left basin, size 3:
+//!
+//! 2199943210
+//! 3987894921
+//! 9856789892
+//! 8767896789
+//! 9899965678
+//! The top-right basin, size 9:
+//!
+//! 2199943210
+//! 3987894921
+//! 9856789892
+//! 8767896789
+//! 9899965678
+//! The middle basin, size 14:
+//!
+//! 2199943210
+//! 3987894921
+//! 9856789892
+//! 8767896789
+//! 9899965678
+//! The bottom-right basin, size 9:
+//!
+//! 2199943210
+//! 3987894921
+//! 9856789892
+//! 8767896789
+//! 9899965678
+//! Find the three largest basins and multiply their sizes together. In the above example, this is 9 * 14 * 9 = 1134.
+//!
+//! What do you get if you multiply together the sizes of the three largest basins?
 
 use std::{
+    collections::HashSet,
     convert::Infallible,
     fmt::{Debug, Error, Formatter},
     num::ParseIntError,
@@ -57,6 +95,49 @@ impl HeightMap {
             }
         }
         pts
+    }
+
+    // counts number of neighbors greater than height and not 9.
+    fn flood_fill(&self, (x, y): (isize, isize), coords: &mut HashSet<(isize, isize)>) {
+        // Off the grid, return early.
+        if x < 0 || y < 0 || x > self.width as isize - 1 || y > self.height as isize - 1 {
+            return;
+        }
+
+        let c = self[(x as usize, y as usize)] as usize;
+        if c == 9 {
+            // Don't count 9's that are neighbors, and stop search.
+            return;
+        }
+
+        coords.insert((x, y));
+        self.flood_fill((x - 1, y), coords);
+        self.flood_fill((x, y - 1), coords);
+        self.flood_fill((x + 1, y), coords);
+        self.flood_fill((x, y + 1), coords);
+    }
+
+    fn basins(&self) -> Vec<usize> {
+        let mut bs = Vec::new();
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let c = self[(x, y)];
+
+                if (x == 0 || c < self[(x - 1, y)])
+                    && (y == 0 || c < self[(x, y - 1)])
+                    && (x == self.width - 1 || c < self[(x + 1, y)])
+                    && (y == self.height - 1 || c < self[(x, y + 1)])
+                {
+                    if c == 0 {
+                        let mut coords = HashSet::new();
+                        self.flood_fill((x as isize, y as isize), &mut coords);
+                        bs.push(coords.len());
+                    }
+                    //panic!("{:?}", bs);
+                }
+            }
+        }
+        bs
     }
 }
 
@@ -97,13 +178,12 @@ fn part1(input: &HeightMap) -> Result<u64> {
     Ok(input.low_points().iter().map(|b| (*b + 1) as u64).sum())
 }
 
-/*
 #[aoc(day9, part2)]
-fn part2(input: &[u64]) -> Result<u64> {
-todo!("part2");
-Ok(0)
+fn part2(hm: &HeightMap) -> Result<usize> {
+    let mut sizes = hm.basins();
+    sizes.sort_unstable();
+    Ok(sizes[sizes.len() - 3..].iter().product())
 }
-*/
 
 #[cfg(test)]
 mod tests {
@@ -125,14 +205,19 @@ mod tests {
         Ok(())
     }
 
-    /*
     #[test]
-    fn test_part2()->Result<()> {
-    let input = r#"
-    "#
-    .trim();
-    assert_eq!(part2(&parse(input)?)?, u64::MAX);
-    Ok(())
+    fn test_part2() -> Result<()> {
+        let input = r#"
+2199943210
+3987894921
+9856789892
+8767896789
+9899965678
+"#
+        .trim();
+        let hm = parse(input)?;
+        assert_eq!(hm.basins(), vec![3, 9, 14, 9]);
+        assert_eq!(part2(&hm)?, 1134);
+        Ok(())
     }
-    */
 }
