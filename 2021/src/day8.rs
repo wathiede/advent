@@ -117,7 +117,7 @@
 //! For each entry, determine all of the wire/segment connections and decode the four-digit output values. What do you get if you add up all of the output values?
 //!
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     convert::Infallible,
     fmt::{Debug, Error, Formatter},
     ops::BitAnd,
@@ -158,7 +158,7 @@ impl FromStr for Segment {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut bits = 0;
         for b in s.as_bytes() {
-            bits |= 1 << b - b'a';
+            bits |= 1 << (b - b'a');
         }
 
         Ok(Segment(bits))
@@ -176,18 +176,18 @@ impl BitAnd for Segment {
 
 fn build_lookup(input: &str) -> Result<HashMap<Segment, u8>> {
     let mut map: HashMap<u8, Segment> = HashMap::new();
-    let set: HashSet<_> = input.split(' ').collect();
+    let set: Vec<_> = input.split(' ').collect();
     for digit in &set {
-        let d = digit.parse().unwrap();
+        let s = digit.parse().unwrap();
         match digit.len() {
             // 1
-            2 => map.insert(1, d),
+            2 => map.insert(1, s),
             // 7
-            3 => map.insert(7, d),
+            3 => map.insert(7, s),
             // 4
-            4 => map.insert(4, d),
+            4 => map.insert(4, s),
             // 8
-            7 => map.insert(8, d),
+            7 => map.insert(8, s),
             _ => None,
         };
     }
@@ -232,18 +232,13 @@ fn build_lookup(input: &str) -> Result<HashMap<Segment, u8>> {
 fn output(line: &str) -> Result<u64> {
     let (inp, out) = line.split_once(" | ").expect("line missing |");
     let lookup = build_lookup(inp)?;
-    let mut answer = 0;
-    for digit in out
+    Ok(out
         .split(' ')
         .map(|s| {
-            let s: Segment = s.parse()?;
-            Ok(lookup[&s])
+            let s: Segment = s.parse().unwrap();
+            lookup[&s]
         })
-        .collect::<Result<Vec<_>>>()?
-    {
-        answer = 10 * answer + digit as u64;
-    }
-    Ok(answer)
+        .fold(0, |answer, d| 10 * answer + d as u64))
 }
 
 #[aoc(day8, part2)]
