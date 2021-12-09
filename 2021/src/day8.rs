@@ -127,7 +127,7 @@ use std::{
 use anyhow::Result;
 use aoc_runner_derive::aoc;
 
-#[aoc(day8, part1)]
+#[aoc(day8, part1, original)]
 fn part1(input: &str) -> Result<usize> {
     Ok(input
         .lines()
@@ -141,6 +141,44 @@ fn part1(input: &str) -> Result<usize> {
                 .count()
         })
         .sum())
+}
+
+#[aoc(day8, part1, no_result)]
+fn part1_no_result(input: &str) -> usize {
+    input
+        .lines()
+        .map(|l| {
+            l.split_once(" | ")
+                .unwrap()
+                .1
+                .split(' ')
+                // 1 | 7 | 4 | 8
+                .filter(|s| matches!(s.len(), 2 | 3 | 4 | 7))
+                .count()
+        })
+        .sum()
+}
+
+#[aoc(day8, part1, flat_map)]
+fn part1_flat_map(input: &str) -> usize {
+    input
+        .lines()
+        .flat_map(|l| l.split_once(" | ").unwrap().1.split(' '))
+        // 1 | 7 | 4 | 8
+        .filter(|s| matches!(s.len(), 2 | 3 | 4 | 7))
+        .count()
+}
+
+#[aoc(day8, part1, glenng)]
+fn part1_glenng(input: &str) -> usize {
+    input
+        .split('\n')
+        .flat_map(|line| {
+            let (_, output) = line.split_once(" | ").unwrap();
+            output.split(' ')
+        })
+        .filter(|s| [2usize, 3, 4, 7].contains(&s.len()))
+        .count()
 }
 
 #[derive(Copy, Clone, Eq, Hash, PartialEq)]
