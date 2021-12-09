@@ -116,7 +116,13 @@
 //!
 //! For each entry, determine all of the wire/segment connections and decode the four-digit output values. What do you get if you add up all of the output values?
 //!
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    convert::Infallible,
+    fmt::{Debug, Error, Formatter},
+    ops::BitAnd,
+    str::FromStr,
+};
 
 use anyhow::Result;
 use aoc_runner_derive::aoc;
@@ -137,86 +143,107 @@ fn part1(input: &str) -> Result<usize> {
         .sum())
 }
 
-fn build_lookup(input: &str) -> Result<HashMap<String, &str>> {
-    let mut map = HashMap::new();
+#[derive(Copy, Clone, Eq, Hash, PartialEq)]
+struct Segment(u8);
+
+impl Debug for Segment {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        write!(f, "{:07b}", self.0)
+    }
+}
+
+impl FromStr for Segment {
+    type Err = Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut bits = 0;
+        for b in s.as_bytes() {
+            bits |= 1 << b - b'a';
+        }
+
+        Ok(Segment(bits))
+    }
+}
+
+impl BitAnd for Segment {
+    type Output = Self;
+
+    // rhs is the "right-hand side" of the expression `a & b`
+    fn bitand(self, rhs: Self) -> Self::Output {
+        Self(self.0 & rhs.0)
+    }
+}
+
+fn build_lookup(input: &str) -> Result<HashMap<Segment, u8>> {
+    let mut map: HashMap<u8, Segment> = HashMap::new();
     let set: HashSet<_> = input.split(' ').collect();
-    for digit in input.split(' ') {
+    for digit in &set {
+        let d = digit.parse().unwrap();
         match digit.len() {
             // 1
-            2 => map.insert("1", digit),
+            2 => map.insert(1, d),
             // 7
-            3 => map.insert("7", digit),
+            3 => map.insert(7, d),
             // 4
-            4 => map.insert("4", digit),
+            4 => map.insert(4, d),
             // 8
-            7 => map.insert("8", digit),
+            7 => map.insert(8, d),
             _ => None,
         };
     }
-    let one: HashSet<_> = map["1"].chars().collect();
-    let four: HashSet<_> = map["4"].chars().collect();
+    let one = map[&1];
+    let four = map[&4];
 
     // 0, 6 or 9 have 6 segments:
     // 9 contains 1 and 4
     // 0 intersects w/ 1 but not w/ 4
     // 6 is the left overs.
     set.iter().filter(|s| s.len() == 6).for_each(|d| {
-        let s: HashSet<_> = d.chars().collect();
-        let one_int: HashSet<_> = s.intersection(&one).cloned().collect();
-        let four_int: HashSet<_> = s.intersection(&four).cloned().collect();
-        if one_int == one && four_int == four {
-            map.insert("9", d);
-        } else if one_int == one {
-            map.insert("0", d);
+        let s: Segment = d.parse().unwrap();
+        if s & one == one && s & four == four {
+            map.insert(9, s);
+        } else if s & one == one {
+            map.insert(0, s);
         } else {
-            map.insert("6", d);
+            map.insert(6, s);
         }
     });
 
-    let nine: HashSet<_> = map["9"].chars().collect();
+    let nine = map[&9];
     // 2, 3 and 5 have 5 segments:
     // 3 has overlap w/ 1
     // 5 is a subset of 9
     // 2 is the left overs.
     set.iter().filter(|s| s.len() == 5).for_each(|d| {
-        let s: HashSet<_> = d.chars().collect();
-        let one_int: HashSet<_> = s.intersection(&one).cloned().collect();
-        let nine_int: HashSet<_> = s.intersection(&nine).cloned().collect();
-        if one_int == one {
-            map.insert("3", d);
-        } else if nine_int == s {
-            map.insert("5", d);
+        let s: Segment = d.parse().unwrap();
+        if s & one == one {
+            map.insert(3, s);
+        } else if s & nine == s {
+            map.insert(5, s);
         } else {
-            map.insert("2", d);
+            map.insert(2, s);
         }
     });
 
-    // Sort value for use as key, and swap key/value.
-    Ok(map
-        .iter()
-        .map(|(&k, v)| {
-            let mut v: Vec<_> = v.chars().collect();
-            v.sort_unstable();
-            (v.iter().collect(), k)
-        })
-        .collect())
+    // Swap key/value.
+    Ok(map.into_iter().map(|(k, v)| (v, k)).collect())
 }
 
 fn output(line: &str) -> Result<u64> {
     let (inp, out) = line.split_once(" | ").expect("line missing |");
     let lookup = build_lookup(inp)?;
-    Ok(out
+    let mut answer = 0;
+    for digit in out
         .split(' ')
         .map(|s| {
-            // Sort letters in string before looking up.
-            let mut s: Vec<_> = s.chars().collect();
-            s.sort_unstable();
-            let s: String = s.iter().collect();
-            lookup[&s]
+            let s: Segment = s.parse()?;
+            Ok(lookup[&s])
         })
-        .collect::<Vec<_>>()
-        .join("")
-        .parse()?)
+        .collect::<Result<Vec<_>>>()?
+    {
+        answer = 10 * answer + digit as u64;
+    }
+    Ok(answer)
 }
 
 #[aoc(day8, part2)]
