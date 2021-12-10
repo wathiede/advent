@@ -60,17 +60,15 @@
 //! What do you get if you multiply together the sizes of the three largest basins?
 
 use std::{
-    collections::HashSet,
+    collections::{HashSet, VecDeque},
     convert::Infallible,
     fmt::{Debug, Error, Formatter},
-    num::ParseIntError,
-    ops::{Index, IndexMut},
+    ops::Index,
     str::FromStr,
 };
 
 use anyhow::Result;
 use aoc_runner_derive::{aoc, aoc_generator};
-use thiserror::Error;
 
 struct HeightMap {
     width: usize,
@@ -78,6 +76,17 @@ struct HeightMap {
     pixels: Vec<u8>,
 }
 
+impl Debug for HeightMap {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        for y in 0..self.height {
+            for x in 0..self.width {
+                write!(f, "{}", self[(x, y)])?;
+            }
+            writeln!(f)?;
+        }
+        Ok(())
+    }
+}
 impl HeightMap {
     fn low_points(&self) -> Vec<u8> {
         let mut pts = Vec::new();
@@ -97,24 +106,27 @@ impl HeightMap {
         pts
     }
 
-    // counts number of neighbors greater than height and not 9.
-    fn flood_fill(&self, (x, y): (isize, isize), coords: &mut HashSet<(isize, isize)>) {
-        // Off the grid, return early.
-        if x < 0 || y < 0 || x > self.width as isize - 1 || y > self.height as isize - 1 {
-            return;
-        }
+    // counts number of neighbors not 9.
+    fn flood_fill(&self, initial: (isize, isize), coords: &mut HashSet<(isize, isize)>) {
+        // This is an iterative implementation of what would be nice to do recursively. Rust
+        // stack overflows on the final dataset if written recursively.
+        let mut q = VecDeque::new();
+        q.push_back(initial);
+        while let Some((x, y)) = q.pop_front() {
+            // Can be negative or outside the width,height, Indeximpl will return 9.
+            let c = self[(x, y)] as usize;
+            if c == 9 {
+                // Don't count 9's that are neighbors and don't explore their neighbors.
+                continue;
+            }
 
-        let c = self[(x as usize, y as usize)] as usize;
-        if c == 9 {
-            // Don't count 9's that are neighbors, and stop search.
-            return;
+            if coords.insert((x, y)) {
+                q.push_back((x - 1, y));
+                q.push_back((x, y - 1));
+                q.push_back((x + 1, y));
+                q.push_back((x, y + 1));
+            }
         }
-
-        coords.insert((x, y));
-        self.flood_fill((x - 1, y), coords);
-        self.flood_fill((x, y - 1), coords);
-        self.flood_fill((x + 1, y), coords);
-        self.flood_fill((x, y + 1), coords);
     }
 
     fn basins(&self) -> Vec<usize> {
@@ -128,12 +140,9 @@ impl HeightMap {
                     && (x == self.width - 1 || c < self[(x + 1, y)])
                     && (y == self.height - 1 || c < self[(x, y + 1)])
                 {
-                    if c == 0 {
-                        let mut coords = HashSet::new();
-                        self.flood_fill((x as isize, y as isize), &mut coords);
-                        bs.push(coords.len());
-                    }
-                    //panic!("{:?}", bs);
+                    let mut coords = HashSet::new();
+                    self.flood_fill((x as isize, y as isize), &mut coords);
+                    bs.push(coords.len());
                 }
             }
         }
@@ -141,10 +150,22 @@ impl HeightMap {
     }
 }
 
+// Index implementation that panics if x or y are greater than width or height.
 impl Index<(usize, usize)> for HeightMap {
     type Output = u8;
     fn index(&self, (x, y): (usize, usize)) -> &Self::Output {
         &self.pixels[x + y * self.width]
+    }
+}
+
+// Index implementation that returns 9 for out of range requests.
+impl Index<(isize, isize)> for HeightMap {
+    type Output = u8;
+    fn index(&self, (x, y): (isize, isize)) -> &Self::Output {
+        if x < 0 || y < 0 || x > self.width as isize - 1 || y > self.height as isize - 1 {
+            return &9;
+        }
+        &self.pixels[x as usize + y as usize * self.width]
     }
 }
 
