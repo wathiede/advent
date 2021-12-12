@@ -1,24 +1,7 @@
-use std::{
-    collections::HashMap,
-    fmt::{Debug, Error, Formatter},
-    num::ParseIntError,
-    ops::{Index, IndexMut},
-    str::FromStr,
-};
+use std::collections::HashMap;
 
 use anyhow::Result;
-use aoc_runner_derive::{aoc, aoc_generator};
-use thiserror::Error;
-
-struct Node {
-    name: String,
-    small: bool,
-    neighbors: Vec<usize>,
-}
-
-struct Graph {
-    nodes: Vec<String>,
-}
+use aoc_runner_derive::aoc;
 
 fn search(node: &str, nodes: &HashMap<&str, Vec<&str>>, path: String, paths: &mut Vec<String>) {
     if node == "end" {
@@ -27,10 +10,8 @@ fn search(node: &str, nodes: &HashMap<&str, Vec<&str>>, path: String, paths: &mu
     }
     for neighbor in &nodes[node] {
         // If lowercase.
-        if neighbor.as_bytes()[0] & 0x20 != 0 {
-            if path.contains(neighbor) {
-                continue;
-            }
+        if neighbor.as_bytes()[0] & 0x20 != 0 && path.contains(neighbor) {
+            continue;
         }
         search(neighbor, nodes, format!("{},{}", path, neighbor), paths);
     }
@@ -47,8 +28,8 @@ fn part1(input: &str) -> Result<usize> {
     let mut nodes = HashMap::new();
     input.lines().for_each(|p| {
         let (n1, n2) = p.split_once('-').expect("missing dash");
-        nodes.entry(n1).or_insert(Vec::new()).push(n2);
-        nodes.entry(n2).or_insert(Vec::new()).push(n1);
+        nodes.entry(n1).or_insert_with(Vec::new).push(n2);
+        nodes.entry(n2).or_insert_with(Vec::new).push(n1);
     });
     Ok(paths(&nodes))
 }
@@ -98,7 +79,7 @@ fn paths2(nodes: &HashMap<&str, Vec<&str>>) -> usize {
         search2(
             "start",
             nodes,
-            &vec!["start"],
+            &["start"],
             &mut paths,
             double,
             smalls.as_slice(),
@@ -114,8 +95,8 @@ fn part2(input: &str) -> Result<usize> {
     let mut nodes = HashMap::new();
     input.lines().for_each(|p| {
         let (n1, n2) = p.split_once('-').expect("missing dash");
-        nodes.entry(n1).or_insert(Vec::new()).push(n2);
-        nodes.entry(n2).or_insert(Vec::new()).push(n1);
+        nodes.entry(n1).or_insert_with(Vec::new).push(n2);
+        nodes.entry(n2).or_insert_with(Vec::new).push(n1);
     });
     Ok(paths2(&nodes))
 }
