@@ -9,21 +9,15 @@ use anyhow::Result;
 use aoc_runner_derive::{aoc, aoc_generator};
 use thiserror::Error;
 
-#[aoc_generator(dayX)]
-fn parse(input: &str) -> Result<Vec<u64>> {
-    todo!("parse");
-    Ok(Vec::new())
-}
-
 #[aoc(dayX, part1)]
-fn part1(input: &[u64]) -> Result<u64> {
+fn part1(input: &str) -> Result<usize> {
     todo!("part1");
     Ok(0)
 }
 
 /*
 #[aoc(dayX, part2)]
-fn part2(input: &[u64]) -> Result<u64> {
+fn part2(input: &str) -> Result<usize> {
     todo!("part2");
     Ok(0)
 }
@@ -38,7 +32,7 @@ mod tests {
         let input = r#"
 "#
         .trim();
-        assert_eq!(part1(&parse(input)?)?, u64::MAX);
+        assert_eq!(part1(input)?, usize::MAX);
         Ok(())
     }
 
@@ -48,7 +42,7 @@ mod tests {
         let input = r#"
     "#
         .trim();
-        assert_eq!(part2(&parse(input)?)?, u64::MAX);
+        assert_eq!(part2(input)?, usize::MAX);
     Ok(())
     }
     */
