@@ -148,13 +148,35 @@ fn part1(input: &str) -> Result<usize> {
     Ok(im.count())
 }
 
-/*
 #[aoc(day13, part2)]
 fn part2(input: &str) -> Result<usize> {
-todo!("part2");
-Ok(0)
+    let (pts, folds) = input.split_once("\n\n").unwrap();
+    let pts: Vec<(usize, usize)> = pts
+        .lines()
+        .map(|l| l.split_once(',').unwrap())
+        .map(|(x, y)| (x.parse().unwrap(), y.parse().unwrap()))
+        .collect();
+    let folds: Vec<_> = folds
+        .lines()
+        .map(|l| l.split(' ').nth(2).unwrap().split_once('=').unwrap())
+        .map(|(axis, idx)| (axis, idx.parse().unwrap()))
+        .collect();
+    let (maxx, maxy) = pts
+        .iter()
+        .fold((0, 0), |(maxx, maxy), (x, y)| (maxx.max(*x), maxy.max(*y)));
+    let mut im = Image::new_with_pts(maxx + 1, maxy + 1, &pts);
+    //dbg!(&im);
+
+    for (axis, idx) in folds.iter() {
+        im = if *axis == "y" {
+            im.fold_y(*idx)
+        } else {
+            im.fold_x(*idx)
+        };
+    }
+    dbg!(&im);
+    Ok(im.count())
 }
-*/
 
 #[cfg(test)]
 mod tests {
