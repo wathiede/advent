@@ -17,6 +17,17 @@ struct Image {
     pixels: Vec<usize>,
 }
 
+impl Image {
+    fn new(width: usize, height: usize) -> Image {
+        let pixels = vec![0; width * height];
+        Image {
+            width,
+            height,
+            pixels,
+        }
+    }
+}
+
 impl Debug for Image {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         writeln!(f)?;
@@ -158,17 +169,8 @@ fn shortest_path(adj_list: &Vec<Vec<Edge>>, start: usize, goal: usize) -> Option
     // Goal not reachable
     None
 }
-#[aoc(day15, part1)]
-fn part1(input: &str) -> Result<usize> {
-    let im: Image = input.parse()?;
-    // TODO build graph by walking pixels, finding neighobrs and using their cost.
-    // let graph = vec![
-    //  // Node 0
-    //  vec![Edge { node: 2, cost: 10 },
-    //       Edge { node: 1, cost: 1 }],
-    //  // Node 1
-    //  vec![Edge { node: 3, cost: 2 }],
-    //  ...
+
+fn make_graph(im: &Image) -> Vec<Vec<Edge>> {
     let idx = |x, y| y * im.width + x;
     let mut graph: Vec<_> = Vec::new();
     for y in 0..im.height {
@@ -201,16 +203,40 @@ fn part1(input: &str) -> Result<usize> {
             graph.push(edges);
         }
     }
+    graph
+}
+
+#[aoc(day15, part1)]
+fn part1(input: &str) -> Result<usize> {
+    let im: Image = input.parse()?;
+    let graph = make_graph(&im);
     Ok(shortest_path(&graph, 0, im.pixels.len() - 1).unwrap())
 }
 
-/*
+fn x5(im: &Image) -> Image {
+    let mut im5 = Image::new(im.width * 5, im.height * 5);
+    for iy in 0..5 {
+        for ix in 0..5 {
+            for y in 0..im.height {
+                for x in 0..im.width {
+                    let v = im[(x, y)] + ix + iy;
+                    let dst_x = ix * im.width + x;
+                    let dst_y = iy * im.height + y;
+                    im5[(dst_x, dst_y)] = if v > 9 { v % 9 } else { v };
+                }
+            }
+        }
+    }
+    im5
+}
+
 #[aoc(day15, part2)]
 fn part2(input: &str) -> Result<usize> {
-todo!("part2");
-Ok(0)
+    let im: Image = input.parse()?;
+    let im = x5(&im);
+    let graph = make_graph(&im);
+    Ok(shortest_path(&graph, 0, im.pixels.len() - 1).unwrap())
 }
-*/
 
 #[cfg(test)]
 mod tests {
@@ -235,14 +261,22 @@ mod tests {
         Ok(())
     }
 
-    /*
     #[test]
-    fn test_part2()->Result<()> {
-    let input = r#"
+    fn test_part2() -> Result<()> {
+        let input = r#"
+1163751742
+1381373672
+2136511328
+3694931569
+7463417111
+1319128137
+1359912421
+3125421639
+1293138521
+2311944581
     "#
-    .trim();
-    assert_eq!(part2(input)?, usize::MAX);
-    Ok(())
+        .trim();
+        assert_eq!(part2(input)?, 315);
+        Ok(())
     }
-    */
 }
