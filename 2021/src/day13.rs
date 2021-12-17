@@ -1,13 +1,5 @@
-use std::{
-    fmt::{Debug, Error, Formatter},
-    num::ParseIntError,
-    ops::{Index, IndexMut},
-    str::FromStr,
-};
-
-use anyhow::Result;
-use aoc_runner_derive::{aoc, aoc_generator};
-use thiserror::Error;
+use advent::prelude::*;
+use aoc_runner_derive::aoc;
 
 struct Image {
     width: usize,
@@ -182,7 +174,7 @@ fn part2(input: &str) -> Result<usize> {
 mod tests {
     use super::*;
 
-    //#[test]
+    #[test]
     fn test_part1() -> Result<()> {
         let input = r#"
 6,10

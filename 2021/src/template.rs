@@ -1,13 +1,5 @@
-use std::{
-    fmt::{Debug, Error, Formatter},
-    num::ParseIntError,
-    ops::{Index, IndexMut},
-    str::FromStr,
-};
-
-use anyhow::Result;
+use advent::prelude::*;
 use aoc_runner_derive::{aoc, aoc_generator};
-use thiserror::Error;
 
 #[aoc(dayX, part1)]
 fn part1(input: &str) -> Result<usize> {
