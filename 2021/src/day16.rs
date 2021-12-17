@@ -18,6 +18,50 @@ fn hex(b: &u8) -> u8 {
     }
 }
 
+fn sum_version(packet: &Packet) -> u64 {
+    fn sum_packets(packets: &[Packet]) -> u64 {
+        packets.iter().map(|p| sum_version(p)).sum()
+    }
+    packet.version as u64
+        + match &packet.packet_type {
+            PacketType::Sum(packets) => sum_packets(&packets),
+            PacketType::Product(packets) => sum_packets(&packets),
+            PacketType::Minimum(packets) => sum_packets(&packets),
+            PacketType::Maximum(packets) => sum_packets(&packets),
+            PacketType::Literal(_) => 0,
+            PacketType::GreaterThan(packets) => sum_packets(&packets),
+            PacketType::LessThan(packets) => sum_packets(&packets),
+            PacketType::Equal(packets) => sum_packets(&packets),
+        }
+}
+
+#[derive(Debug)]
+enum PacketType {
+    // 0
+    Sum(Vec<Packet>),
+    // 1
+    Product(Vec<Packet>),
+    // 2
+    Minimum(Vec<Packet>),
+    // 3
+    Maximum(Vec<Packet>),
+    // 4
+    Literal(u64),
+    // 5
+    GreaterThan(Vec<Packet>),
+    // 6
+    LessThan(Vec<Packet>),
+    // 7
+    Equal(Vec<Packet>),
+}
+
+#[derive(Debug)]
+struct Packet {
+    version: u64,
+    bit_size: u64,
+    packet_type: PacketType,
+}
+
 struct Parser<'a> {
     bytes: &'a [u8],
     tmp: u64,
@@ -60,73 +104,78 @@ impl<'a> Parser<'a> {
         v as u64
     }
 }
-fn read_packet(p: &mut Parser) -> (Vec<u64>, u64) {
-    let mut versions = Vec::new();
-    let mut bits_processed: u64 = 0;
+
+fn parse_packet(p: &mut Parser) -> Packet {
+    let mut bit_size: u64 = 0;
     let version = p.read(3);
-    versions.push(version);
-    bits_processed += 3;
-    let typ = p.read(3);
-    bits_processed += 3;
-    println!("version {} type {}", version, typ);
-    if typ == 4 {
+    bit_size += 3;
+    let packet_type_id = p.read(3);
+    bit_size += 3;
+    println!("version {} type {}", version, packet_type_id);
+    let packet_type = if packet_type_id == 4 {
         // Literal, read 5 bits at a time until MSB is 0
         println!("type 4 literal");
         loop {
             let l = p.read(5);
-            bits_processed += 5;
+            bit_size += 5;
             println!("literal 0b{:05b}", l);
             if 0b10000 & l == 0 {
-                /*
-                // Read trailing 0s
-                let n = 4 - ((bits_processed) % 4) as usize;
-                println!(
-                    "bits processed {}, draining {} trailing 0s",
-                    bits_processed, n
-                );
-                let _ = p.read(n);
-                bits_processed += n as u64;
-                */
-
                 break;
             }
         }
+        // TODO parse literal value above.
+        PacketType::Literal(0)
     } else {
         // length type ID
         let ltid = p.read(1);
-        bits_processed += 1;
+        bit_size += 1;
+        let mut packets = Vec::new();
         if ltid == 0 {
             // If the length type ID is 0, then the next 15 bits are a number that represents the total length in bits of the sub-packets contained by this packet.
             let len = p.read(15);
-            bits_processed += 15;
+            bit_size += 15;
             println!("{} bits in subpacket", len);
             let mut sub_bits = 0;
             while sub_bits < len {
-                let (vs, bp) = read_packet(p);
-                versions.extend(vs.iter());
-                bits_processed += bp;
-                sub_bits += bp;
+                let sub_p = parse_packet(p);
+                bit_size += sub_p.bit_size;
+                sub_bits += sub_p.bit_size;
+                packets.push(sub_p);
             }
         } else {
             // If the length type ID is 1, then the next 11 bits are a number that represents the number of sub-packets immediately contained by this packet.
             let num = p.read(11);
-            bits_processed += 11;
+            bit_size += 11;
             println!("{} subpackets", num);
             for _ in 0..num {
-                let (vs, bp) = read_packet(p);
-                versions.extend(vs.iter());
-                bits_processed += bp;
+                let sub_p = parse_packet(p);
+                bit_size += sub_p.bit_size;
+                packets.push(sub_p);
             }
         }
+        match packet_type_id {
+            0 => PacketType::Sum(packets),
+            1 => PacketType::Product(packets),
+            2 => PacketType::Minimum(packets),
+            3 => PacketType::Maximum(packets),
+            5 => PacketType::GreaterThan(packets),
+            6 => PacketType::LessThan(packets),
+            7 => PacketType::Equal(packets),
+            _ => panic!("unknown packet type ID {}", packet_type_id),
+        }
+    };
+    Packet {
+        version,
+        bit_size,
+        packet_type,
     }
-    return (versions, bits_processed);
 }
 
 #[aoc(day16, part1)]
 fn part1(input: &str) -> Result<u64> {
     let mut p = Parser::new(input);
-    let (versions, _) = read_packet(&mut p);
-    Ok(versions.iter().sum())
+    let packet = parse_packet(&mut p);
+    Ok(sum_version(&packet))
 }
 
 /*
