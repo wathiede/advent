@@ -35,6 +35,37 @@ fn sum_version(packet: &Packet) -> u64 {
         }
 }
 
+fn interpret(packet: &Packet) -> u64 {
+    match &packet.packet_type {
+        PacketType::Sum(packets) => packets.iter().map(interpret).sum(),
+        PacketType::Product(packets) => packets.iter().map(interpret).product(),
+        PacketType::Minimum(packets) => packets.iter().map(interpret).min().unwrap(),
+        PacketType::Maximum(packets) => packets.iter().map(interpret).max().unwrap(),
+        PacketType::Literal(v) => *v,
+        PacketType::GreaterThan(packets) => {
+            if interpret(&packets[0]) > interpret(&packets[1]) {
+                1
+            } else {
+                0
+            }
+        }
+        PacketType::LessThan(packets) => {
+            if interpret(&packets[0]) < interpret(&packets[1]) {
+                1
+            } else {
+                0
+            }
+        }
+        PacketType::Equal(packets) => {
+            if interpret(&packets[0]) == interpret(&packets[1]) {
+                1
+            } else {
+                0
+            }
+        }
+    }
+}
+
 #[derive(Debug)]
 enum PacketType {
     // 0
@@ -78,10 +109,7 @@ impl<'a> Parser<'a> {
     }
     fn read(&mut self, n: usize) -> u64 {
         assert!(n < 32, "can't read more than 32 bits at time");
-        print!(
-            "   BEGIN n {0} tmp 0b{1:b} len {2}    - ",
-            n, self.tmp, self.tmp_len
-        );
+        //print!( "   BEGIN n {0} tmp 0b{1:b} len {2}    - ", n, self.tmp, self.tmp_len);
         while self.tmp_len < n {
             let mut buf = [0; 1];
             self.bytes.read_exact(&mut buf).expect("EOF");
@@ -97,10 +125,7 @@ impl<'a> Parser<'a> {
         let mask = (1 << self.tmp_len) - 1;
         self.tmp = self.tmp & mask;
 
-        println!(
-            "   END n {0} tmp 0b{2:b} len {3} v 0b{1:00$b} ",
-            n, v, self.tmp, self.tmp_len
-        );
+        //println!( "   END n {0} tmp 0b{2:b} len {3} v 0b{1:00$b} ", n, v, self.tmp, self.tmp_len);
         v as u64
     }
 }
@@ -111,20 +136,18 @@ fn parse_packet(p: &mut Parser) -> Packet {
     bit_size += 3;
     let packet_type_id = p.read(3);
     bit_size += 3;
-    println!("version {} type {}", version, packet_type_id);
     let packet_type = if packet_type_id == 4 {
         // Literal, read 5 bits at a time until MSB is 0
-        println!("type 4 literal");
+        let mut v = 0;
         loop {
             let l = p.read(5);
+            v = (v << 4) | (l & 0b1111);
             bit_size += 5;
-            println!("literal 0b{:05b}", l);
             if 0b10000 & l == 0 {
                 break;
             }
         }
-        // TODO parse literal value above.
-        PacketType::Literal(0)
+        PacketType::Literal(v)
     } else {
         // length type ID
         let ltid = p.read(1);
@@ -134,7 +157,6 @@ fn parse_packet(p: &mut Parser) -> Packet {
             // If the length type ID is 0, then the next 15 bits are a number that represents the total length in bits of the sub-packets contained by this packet.
             let len = p.read(15);
             bit_size += 15;
-            println!("{} bits in subpacket", len);
             let mut sub_bits = 0;
             while sub_bits < len {
                 let sub_p = parse_packet(p);
@@ -146,7 +168,6 @@ fn parse_packet(p: &mut Parser) -> Packet {
             // If the length type ID is 1, then the next 11 bits are a number that represents the number of sub-packets immediately contained by this packet.
             let num = p.read(11);
             bit_size += 11;
-            println!("{} subpackets", num);
             for _ in 0..num {
                 let sub_p = parse_packet(p);
                 bit_size += sub_p.bit_size;
@@ -178,13 +199,12 @@ fn part1(input: &str) -> Result<u64> {
     Ok(sum_version(&packet))
 }
 
-/*
 #[aoc(day16, part2)]
-fn part2(input: &str) -> Result<usize> {
-todo!("part2");
-Ok(0)
+fn part2(input: &str) -> Result<u64> {
+    let mut p = Parser::new(input);
+    let packet = parse_packet(&mut p);
+    Ok(interpret(&packet))
 }
-*/
 
 #[cfg(test)]
 mod tests {
@@ -210,14 +230,25 @@ mod tests {
         Ok(())
     }
 
-    /*
     #[test]
-    fn test_part2()->Result<()> {
-    let input = r#"
-    "#
-    .trim();
-    assert_eq!(part2(input)?, usize::MAX);
-    Ok(())
+    fn test_part2() -> Result<()> {
+        let input = vec![
+            ("C200B40A82", 3),
+            ("04005AC33890", 54),
+            ("880086C3E88112", 7),
+            ("CE00C43D881120", 9),
+            ("D8005AC2A8F0", 1),
+            ("F600BC2D8F", 0),
+            ("9C005AC2F8F0", 0),
+            ("9C0141080250320F1802104A08", 1),
+        ];
+        for (inp, want) in input {
+            print!("\nTesting '{}'\n - ", inp);
+            inp.as_bytes().iter().for_each(|c| print!("{:04b}", hex(c)));
+            println!();
+            assert_eq!(part2(inp)?, want);
+            println!("Passed '{}'", inp);
+        }
+        Ok(())
     }
-    */
 }
