@@ -161,8 +161,7 @@ impl MarkerBoard {
         let m = self.0;
 
         // Bingo horizontally
-        false
-            || (m & h == h)
+        (m & h == h)
             || ((m >> 5 & h) == h)
             || ((m >> 10 & h) == h)
             || ((m >> 15 & h) == h)

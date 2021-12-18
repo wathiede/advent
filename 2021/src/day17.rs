@@ -1,5 +1,5 @@
 use advent::prelude::*;
-use aoc_runner_derive::{aoc, aoc_generator};
+use aoc_runner_derive::aoc;
 
 #[derive(Debug)]
 struct Target {
@@ -43,11 +43,11 @@ impl FromStr for Target {
         let y = &parts[3][2..];
         let (x_min, x_max) = x
             .split_once("..")
-            .and_then(|(min, max)| Some((min.parse().unwrap(), max.parse().unwrap())))
+            .map(|(min, max)| (min.parse().unwrap(), max.parse().unwrap()))
             .unwrap();
         let (y_min, y_max) = y
             .split_once("..")
-            .and_then(|(min, max)| Some((min.parse().unwrap(), max.parse().unwrap())))
+            .map(|(min, max)| (min.parse().unwrap(), max.parse().unwrap()))
             .unwrap();
 
         Ok(Target {

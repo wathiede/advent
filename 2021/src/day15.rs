@@ -114,7 +114,7 @@ impl Debug for Edge {
 // to each node. This implementation isn't memory-efficient as it may leave duplicate
 // nodes in the queue. It also uses `usize::MAX` as a sentinel value,
 // for a simpler implementation.
-fn shortest_path(adj_list: &Vec<Vec<Edge>>, start: usize, goal: usize) -> Option<usize> {
+fn shortest_path(adj_list: &[Vec<Edge>], start: usize, goal: usize) -> Option<usize> {
     // dist[node] = current shortest distance from `start` to `node`
     let mut dist: Vec<_> = (0..adj_list.len()).map(|_| usize::MAX).collect();
 

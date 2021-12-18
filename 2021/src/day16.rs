@@ -11,18 +11,18 @@ fn hex(b: &u8) -> u8 {
 
 fn sum_version(packet: &Packet) -> u64 {
     fn sum_packets(packets: &[Packet]) -> u64 {
-        packets.iter().map(|p| sum_version(p)).sum()
+        packets.iter().map(sum_version).sum()
     }
     packet.version as u64
         + match &packet.packet_type {
-            PacketType::Sum(packets) => sum_packets(&packets),
-            PacketType::Product(packets) => sum_packets(&packets),
-            PacketType::Minimum(packets) => sum_packets(&packets),
-            PacketType::Maximum(packets) => sum_packets(&packets),
+            PacketType::Sum(packets) => sum_packets(packets),
+            PacketType::Product(packets) => sum_packets(packets),
+            PacketType::Minimum(packets) => sum_packets(packets),
+            PacketType::Maximum(packets) => sum_packets(packets),
             PacketType::Literal(_) => 0,
-            PacketType::GreaterThan(packets) => sum_packets(&packets),
-            PacketType::LessThan(packets) => sum_packets(&packets),
-            PacketType::Equal(packets) => sum_packets(&packets),
+            PacketType::GreaterThan(packets) => sum_packets(packets),
+            PacketType::LessThan(packets) => sum_packets(packets),
+            PacketType::Equal(packets) => sum_packets(packets),
         }
 }
 
@@ -114,7 +114,7 @@ impl<'a> Parser<'a> {
         let v = (self.tmp >> self.tmp_len) & mask;
 
         let mask = (1 << self.tmp_len) - 1;
-        self.tmp = self.tmp & mask;
+        self.tmp &= mask;
 
         //println!( "   END n {0} tmp 0b{2:b} len {3} v 0b{1:00$b} ", n, v, self.tmp, self.tmp_len);
         v as u64
