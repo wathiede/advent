@@ -1,7 +1,7 @@
 pub mod prelude {
     pub use std::{
         convert::Infallible,
-        fmt::{Debug, Error, Formatter},
+        fmt::{Debug, Display, Error, Formatter},
         io::Read,
         num::ParseIntError,
         ops::{Index, IndexMut},

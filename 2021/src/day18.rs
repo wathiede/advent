@@ -35,6 +35,13 @@ fn read_byte<R: Read>(reader: &mut R) -> std::io::Result<Option<u8>> {
 }
 
 impl Tree {
+    fn merge(left: &Tree, right: &Tree) -> Tree {
+        // This is lazy but works for simple any obvious reasons (if FromStr and Display work
+        // correctly).
+        format!("[{},{}]", left, right)
+            .parse()
+            .expect("failed to parse merge tree")
+    }
     fn find_root(&self, node: &Node) -> Idx {
         match node.parent {
             Some(parent_idx) => self.find_root(&self[parent_idx]),
@@ -192,6 +199,15 @@ mod tests {
             assert_eq!(&t.to_string(), s, "input {}: '{}'", i, s);
             //assert_eq!(&t.to_string(), s, "input {}: '{}'\ntree: {:#?}", i, s, t);
         }
+        Ok(())
+    }
+
+    #[test]
+    fn test_merge() -> Result<()> {
+        assert_eq!(
+            Tree::merge(&"[1,2]".parse().unwrap(), &"[[3,4],5]".parse().unwrap()),
+            "[[1,2],[[3,4],5]]".parse().unwrap()
+        );
         Ok(())
     }
 
