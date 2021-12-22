@@ -1,5 +1,6 @@
 pub mod prelude {
     pub use std::{
+        collections::{HashMap, HashSet},
         convert::Infallible,
         fmt::{Debug, Display, Error, Formatter},
         io::Read,
@@ -10,4 +11,8 @@ pub mod prelude {
 
     pub use anyhow::Result;
     pub use thiserror::Error;
+
+    pub use crate::image::Image;
 }
+
+mod image;
