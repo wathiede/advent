@@ -1,5 +1,6 @@
 use advent::prelude::*;
 use aoc_runner_derive::aoc;
+use std::ops::RangeInclusive;
 
 struct Image(HashSet<(isize, isize)>);
 
@@ -16,19 +17,29 @@ impl Image {
                 .collect(),
         )
     }
-    fn lookup(&self, x: isize, y: isize, algo: &[bool]) -> usize {
+    fn lookup(
+        &self,
+        x: isize,
+        y: isize,
+        algo: &[bool],
+        odd: bool,
+        x_rng: &RangeInclusive<isize>,
+        y_rng: &RangeInclusive<isize>,
+    ) -> usize {
         assert_eq!(algo.len(), 512);
         let mut idx = 0;
         for y_off in -1..=1 {
             for x_off in -1..=1 {
-                idx <<= 1;
                 let x_idx = x + x_off;
                 let y_idx = y + y_off;
-                idx |= if self.0.contains(&(x_idx, y_idx)) {
+                let out_of_bounds = !(x_rng.contains(&x_idx) && y_rng.contains(&y_idx));
+                let val = if (odd && out_of_bounds && algo[0]) || self.0.contains(&(x_idx, y_idx)) {
                     1
                 } else {
                     0
                 };
+                idx <<= 1;
+                idx |= val;
             }
         }
         idx
@@ -42,12 +53,14 @@ impl Image {
         )
     }
 
-    fn enhance(&self, algo: &[bool]) -> Image {
+    fn enhance(&self, algo: &[bool], odd: bool) -> Image {
         let (min_x, max_x, min_y, max_y) = self.extents();
+        let x_rng = min_x..=max_x;
+        let y_rng = min_y..=max_y;
         let mut new_im = HashSet::new();
-        for y in min_y - 10..=max_y + 10 {
-            for x in min_x - 10..=max_x + 10 {
-                let idx = self.lookup(x, y, algo);
+        for y in min_y - 1..=max_y + 1 {
+            for x in min_x - 1..=max_x + 1 {
+                let idx = self.lookup(x, y, algo, odd, &x_rng, &y_rng);
                 if algo[idx] {
                     new_im.insert((x, y));
                 }
@@ -90,33 +103,41 @@ impl Debug for Image {
     }
 }
 
+fn process(im: Image, algo: &[bool], num_steps: isize) -> Image {
+    let mut im = im;
+    for step in 0..num_steps {
+        let (min_x, max_x, min_y, max_y) = im.extents();
+        im = im.enhance(algo, step % 2 == 1);
+        im = im.crop(min_x - 1, max_x + 1, min_y - 1, max_y + 1)
+    }
+    im
+}
+
 #[aoc(day20, part1)]
 fn part1(input: &str) -> Result<usize> {
     let (algo, im) = input.split_once("\n\n").unwrap();
     let im = Image::new(im);
     let algo: Vec<bool> = algo.as_bytes().iter().map(|c| c == &b'#').collect();
+    let im = process(im, &algo, 2);
 
-    let (min_x, max_x, min_y, max_y) = im.extents();
-
-    dbg!(&im, im.lights());
-    let im = im.enhance(&algo);
-    dbg!(&im, im.lights());
-    let im = im.enhance(&algo);
-    dbg!(&im, im.lights());
-    let im = im.crop(min_x - 2, max_x + 2, min_y - 2, max_y + 2);
     dbg!(&im, im.lights());
     let answer = im.lights();
-    assert!(answer < 5285);
+    assert!(answer == 5268 || answer == 35);
     Ok(answer)
 }
 
-/*
 #[aoc(day20, part2)]
 fn part2(input: &str) -> Result<usize> {
-todo!("part2");
-Ok(0)
+    let (algo, im) = input.split_once("\n\n").unwrap();
+    let im = Image::new(im);
+    let algo: Vec<bool> = algo.as_bytes().iter().map(|c| c == &b'#').collect();
+    let im = process(im, &algo, 50);
+
+    dbg!(&im, im.lights());
+    let answer = im.lights();
+    assert!(answer < 19245);
+    Ok(answer)
 }
-*/
 
 #[cfg(test)]
 mod tests {
@@ -137,7 +158,11 @@ mod tests {
         let (algo, im) = input.split_once("\n\n").unwrap();
         let im = Image::new(im);
         let algo: Vec<bool> = algo.as_bytes().iter().map(|c| c == &b'#').collect();
-        assert_eq!(im.lookup(2, 2, &algo), 34);
+        let (min_x, max_x, min_y, max_y) = im.extents();
+        assert_eq!(
+            im.lookup(2, 2, &algo, false, &(min_x..=max_x), &(min_y..=max_y)),
+            34,
+        );
         Ok(())
     }
 
@@ -156,15 +181,19 @@ mod tests {
         assert_eq!(part1(input)?, 35);
         Ok(())
     }
-
-    /*
     #[test]
-    fn test_part2()->Result<()> {
-    let input = r#"
-    "#
-    .trim();
-    assert_eq!(part2(input)?, usize::MAX);
-    Ok(())
+    fn test_part2() -> Result<()> {
+        let input = r#"
+..#.#..#####.#.#.#.###.##.....###.##.#..###.####..#####..#....#..#..##..###..######.###...####..#..#####..##..#.#####...##.#.#..#.##..#.#......#.###.######.###.####...#.##.##..#..#..#####.....#.#....###..#.##......#.....#..#..#..##..#...##.######.####.####.#.#...#.......#..#.#.#...####.##.#......#..#...##.#.##..#...##.#.##..###.#......#.#.......#.#.#.####.###.##...#.....####.#..#..#.##.#....##..#.####....##...##..#...#......#.#.......#.......##..####..#...#.#.#...##..#.#..###..#####........#..####......#..#
+
+#..#.
+#....
+##..#
+..#..
+..###
+"#
+.trim();
+        assert_eq!(part2(input)?, 3351);
+        Ok(())
     }
-    */
 }
