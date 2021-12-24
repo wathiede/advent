@@ -130,7 +130,7 @@ fn play_part2(p1: Player, p2: Player) -> (usize, usize) {
     (p1_score, p2_score)
 }
 
-#[aoc(day21, part2)]
+//#[aoc(day21, part2)]
 fn part2(input: &str) -> Result<usize> {
     let mut p: Vec<_> = input
         .lines()
@@ -160,7 +160,7 @@ Player 2 starting position: 8
         Ok(())
     }
 
-    #[test]
+    //#[test]
     fn test_part2() -> Result<()> {
         let input = r#"
 Player 1 starting position: 4
