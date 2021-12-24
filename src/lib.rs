@@ -5,7 +5,7 @@ pub mod prelude {
         fmt::{Debug, Display, Error, Formatter},
         io::Read,
         num::ParseIntError,
-        ops::{Index, IndexMut},
+        ops::{Index, IndexMut, RangeInclusive},
         str::FromStr,
     };
 
