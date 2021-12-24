@@ -1,5 +1,5 @@
 use advent::prelude::*;
-use aoc_runner_derive::{aoc, aoc_generator};
+use aoc_runner_derive::aoc;
 
 #[aoc(dayX, part1)]
 fn part1(input: &str) -> Result<usize> {
