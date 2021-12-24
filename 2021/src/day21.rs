@@ -94,8 +94,7 @@ fn play_part2(p1: Player, p2: Player) -> (usize, usize) {
                     for x in [1, 2, 3] {
                         for y in [1, 2, 3] {
                             for z in [1, 2, 3] {
-                                let (p1s, p2s) =
-                                    play_part2_rec(p1.clone(), p2.clone(), i, j, k, x, y, z);
+                                let (p1s, p2s) = play_part2_rec(p1, p2, i, j, k, x, y, z);
                                 p1_score += p1s;
                                 p2_score += p2s;
                             }
@@ -116,8 +115,7 @@ fn play_part2(p1: Player, p2: Player) -> (usize, usize) {
                 for x in [1, 2, 3] {
                     for y in [1, 2, 3] {
                         for z in [1, 2, 3] {
-                            let (p1s, p2s) =
-                                play_part2_rec(p1.clone(), p2.clone(), i, j, k, x, y, z);
+                            let (p1s, p2s) = play_part2_rec(p1, p2, i, j, k, x, y, z);
                             p1_score += p1s;
                             p2_score += p2s;
                             println!("Running score {} vs {}", p1_score, p2_score);
@@ -132,7 +130,7 @@ fn play_part2(p1: Player, p2: Player) -> (usize, usize) {
 
 //#[aoc(day21, part2)]
 fn part2(input: &str) -> Result<usize> {
-    let mut p: Vec<_> = input
+    let p: Vec<_> = input
         .lines()
         .map(|l| l.split_once(": ").unwrap())
         .map(|(_, space)| space.parse().expect("couldn't parse starting spaceition"))
