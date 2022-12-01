@@ -1,6 +1,6 @@
 pub mod prelude {
     pub use std::{
-        collections::{HashMap, HashSet},
+        collections::{HashMap, HashSet, VecDeque},
         convert::Infallible,
         fmt::{Debug, Display, Error, Formatter},
         io::Read,
