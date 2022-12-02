@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use anyhow::Result;
-use aoc_runner_derive::{aoc, aoc_generator};
+use aoc_runner_derive::aoc;
 
 #[derive(Eq, PartialEq)]
 enum Play {
@@ -43,6 +43,7 @@ impl Play {
             (&Paper, "X") => Play::Rock,
             (&Paper, "Y") => Play::Paper,
             (&Paper, "Z") => Play::Scissors,
+
             (&Rock, _) | (&Scissors, _) | (&Paper, _) => panic!("Unknown play '{}'", s),
         }
     }
@@ -63,7 +64,7 @@ impl FromStr for Play {
 #[aoc(day2, part1)]
 fn part1(input: &str) -> usize {
     input
-        .split("\n")
+        .split('\n')
         .map(|l| {
             let (them, me) = l.split_once(' ').unwrap();
             let (them, me): (Play, Play) = (
@@ -78,7 +79,7 @@ fn part1(input: &str) -> usize {
 #[aoc(day2, part2)]
 fn part2(input: &str) -> usize {
     input
-        .split("\n")
+        .split('\n')
         .map(|l| {
             let (them, me) = l.split_once(' ').unwrap();
             let them: Play = them.parse().expect("couldn't parse them");
