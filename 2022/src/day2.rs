@@ -66,10 +66,9 @@ fn part1(input: &str) -> usize {
     input
         .split('\n')
         .map(|l| {
-            let (them, me) = l.split_once(' ').unwrap();
             let (them, me): (Play, Play) = (
-                them.parse().expect("couldn't parse them"),
-                me.parse().expect("couldn't parse me"),
+                l[..1].parse().expect("couldn't parse them"),
+                l[2..3].parse().expect("couldn't parse me"),
             );
             me.play(&them) + me.points()
         })
@@ -81,9 +80,8 @@ fn part2(input: &str) -> usize {
     input
         .split('\n')
         .map(|l| {
-            let (them, me) = l.split_once(' ').unwrap();
-            let them: Play = them.parse().expect("couldn't parse them");
-            let me = them.solve(me);
+            let them: Play = l[..1].parse().expect("couldn't parse them");
+            let me = them.solve(&l[2..3]);
             me.play(&them) + me.points()
         })
         .sum()
