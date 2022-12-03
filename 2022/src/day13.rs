@@ -1,6 +1,3 @@
-use std::str::FromStr;
-
-use anyhow::Result;
 use aoc_runner_derive::aoc;
 
 #[aoc(day13, part1)]
