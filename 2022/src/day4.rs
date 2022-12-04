@@ -3,7 +3,7 @@ use aoc_runner_derive::aoc;
 #[aoc(day4, part1)]
 fn part1(input: &str) -> usize {
     input
-        .split('\n')
+        .lines()
         .filter(|l| {
             let (e1, e2) = l.split_once(',').unwrap();
             let (e1l, e1h) = e1
@@ -32,7 +32,7 @@ fn part1(input: &str) -> usize {
 #[aoc(day4, part2)]
 fn part2(input: &str) -> usize {
     input
-        .split('\n')
+        .lines()
         .filter(|l| {
             let (e1, e2) = l.split_once(',').unwrap();
             let (e1l, e1h) = e1
