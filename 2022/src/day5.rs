@@ -1,3 +1,5 @@
+use std::fmt;
+
 use aoc_runner_derive::aoc;
 
 #[derive(Debug)]
@@ -19,6 +21,39 @@ impl Stacks {
     }
     fn tops(&self) -> String {
         self.stacks.iter().map(|s| s[s.len() - 1]).collect()
+    }
+}
+
+impl fmt::Display for Stacks {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut rlines = vec![(0..self.stacks.len())
+            .map(|n| format!(" {} ", n + 1))
+            .collect::<Vec<_>>()
+            .join(" ")];
+        let max = self
+            .stacks
+            .iter()
+            .map(|s| s.len())
+            .max()
+            .expect("couldn't compute max");
+        for i in 0..max {
+            rlines.push(
+                self.stacks
+                    .iter()
+                    .map(|s| {
+                        if i >= s.len() {
+                            "   ".to_string()
+                        } else {
+                            format!("[{}]", s[i])
+                        }
+                    })
+                    .collect::<Vec<_>>()
+                    .join(" "),
+            );
+        }
+
+        rlines.reverse();
+        write!(f, "{}", rlines.join("\n"))
     }
 }
 
@@ -55,6 +90,7 @@ fn build_stacks(top: &str) -> Stacks {
 fn part1(input: &str) -> String {
     let (top, bottom) = input.split_once("\n\n").unwrap();
     let mut s = build_stacks(top);
+    println!("Stacks:\n{s}");
     for line in bottom.lines() {
         let parts: Vec<_> = line.split(' ').collect();
         s.move_crate(
