@@ -12,6 +12,13 @@ impl Stacks {
             self.stacks[to - 1].push(v);
         }
     }
+    fn move_crate_9001(&mut self, count: usize, from: usize, to: usize) {
+        let mut chunk: Vec<_> = (0..count)
+            .map(|_| self.stacks[from - 1].pop().expect("popped empty stack"))
+            .collect();
+        chunk.reverse();
+        self.stacks[to - 1].extend(chunk);
+    }
     fn tops(&self) -> String {
         self.stacks.iter().map(|s| s[s.len() - 1]).collect()
     }
@@ -62,5 +69,18 @@ fn part1(input: &str) -> String {
     s.tops()
 }
 
-// #[aoc(day5, part2)]
-// fn part2(input: &str) -> usize { }
+#[aoc(day5, part2)]
+fn part2(input: &str) -> String {
+    let (top, bottom) = input.split_once("\n\n").unwrap();
+    let mut s = build_stacks(top);
+    println!("{:#?}", s);
+    for line in bottom.lines() {
+        let parts: Vec<_> = line.split(' ').collect();
+        s.move_crate_9001(
+            parts[1].parse().expect("couldn't parse number"),
+            parts[3].parse().expect("couldn't parse number"),
+            parts[5].parse().expect("couldn't parse number"),
+        );
+    }
+    s.tops()
+}
