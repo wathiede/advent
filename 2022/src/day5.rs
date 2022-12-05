@@ -13,10 +13,8 @@ impl Stacks {
         }
     }
     fn move_crate_9001(&mut self, count: usize, from: usize, to: usize) {
-        let mut chunk: Vec<_> = (0..count)
-            .map(|_| self.stacks[from - 1].pop().expect("popped empty stack"))
-            .collect();
-        chunk.reverse();
+        let off = self.stacks[from - 1].len() - count;
+        let chunk = self.stacks[from - 1].split_off(off);
         self.stacks[to - 1].extend(chunk);
     }
     fn tops(&self) -> String {
@@ -57,7 +55,6 @@ fn build_stacks(top: &str) -> Stacks {
 fn part1(input: &str) -> String {
     let (top, bottom) = input.split_once("\n\n").unwrap();
     let mut s = build_stacks(top);
-    println!("{:#?}", s);
     for line in bottom.lines() {
         let parts: Vec<_> = line.split(' ').collect();
         s.move_crate(
@@ -73,7 +70,6 @@ fn part1(input: &str) -> String {
 fn part2(input: &str) -> String {
     let (top, bottom) = input.split_once("\n\n").unwrap();
     let mut s = build_stacks(top);
-    println!("{:#?}", s);
     for line in bottom.lines() {
         let parts: Vec<_> = line.split(' ').collect();
         s.move_crate_9001(
@@ -82,5 +78,7 @@ fn part2(input: &str) -> String {
             parts[5].parse().expect("couldn't parse number"),
         );
     }
-    s.tops()
+    let v = s.tops();
+    assert_eq!(v, "NBTVTJNFJ");
+    v
 }
