@@ -90,7 +90,7 @@ fn build_stacks(top: &str) -> Stacks {
 fn part1(input: &str) -> String {
     let (top, bottom) = input.split_once("\n\n").unwrap();
     let mut s = build_stacks(top);
-    println!("Stacks:\n{s}");
+    //println!("Stacks:\n{s}");
     for line in bottom.lines() {
         let parts: Vec<_> = line.split(' ').collect();
         s.move_crate(
