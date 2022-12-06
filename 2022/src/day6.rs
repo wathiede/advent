@@ -6,7 +6,6 @@ use aoc_runner_derive::aoc;
 fn part1(input: &str) -> usize {
     for (i, chars) in input.as_bytes().windows(4).enumerate() {
         let uniq: HashSet<_> = chars.iter().collect();
-        dbg!(&chars, &uniq);
         if uniq.len() == 4 {
             return i + 4;
         }
@@ -18,5 +17,14 @@ fn part1(input: &str) -> usize {
 fn p1() {
     assert_eq!(part1("bvwbjplbgvbhsrlpgdmjqwftvncz"), 5);
 }
-// #[aoc(day6, part2)]
-// fn part2(input: &str) -> usize { }
+#[aoc(day6, part2)]
+fn part2(input: &str) -> usize {
+    let marker_len = 14;
+    for (i, chars) in input.as_bytes().windows(marker_len).enumerate() {
+        let uniq: HashSet<_> = chars.iter().collect();
+        if uniq.len() == marker_len {
+            return i + marker_len;
+        }
+    }
+    0
+}
