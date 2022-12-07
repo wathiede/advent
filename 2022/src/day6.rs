@@ -7,8 +7,11 @@ fn solve(input: &str, marker_len: usize) -> usize {
         .as_bytes()
         .windows(marker_len)
         .position(|chars| {
-            let uniq: HashSet<_> = chars.iter().collect();
-            uniq.len() == marker_len
+            chars
+                .iter()
+                .fold(0_u64, |bits, c| bits | (1 << c - b'A'))
+                .count_ones()
+                == marker_len.try_into().unwrap()
         })
         .expect("not found")
         + marker_len
