@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use aoc_runner_derive::aoc;
 
 fn solve(input: &str, marker_len: usize) -> usize {

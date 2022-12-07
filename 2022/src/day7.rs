@@ -85,7 +85,6 @@ impl<'a> Filesystem<'a> {
             .iter()
             .map(|idx| &self.dirs[*idx])
             .position(|d| d.name == path);
-        dbg!(o_idx, path);
         let idx = if let Some(child_idx) = o_idx {
             cur.dirs[child_idx]
         } else {
@@ -151,7 +150,7 @@ impl<'a> fmt::Display for Filesystem<'a> {
 fn part1(input: &str) -> usize {
     let mut fs = Filesystem::new();
     input.lines().for_each(|l| {
-        println!("{l}");
+        //println!("{l}");
         let parts: Vec<_> = l.split(" ").collect();
         match parts.as_slice() {
             ["$", "cd", "/"] => (),
@@ -167,11 +166,12 @@ fn part1(input: &str) -> usize {
             _ => panic!("unexpected pattern: {}", l),
         };
     });
-    dbg!(&fs);
-    println!("FS:\n{}", &fs);
+    //dbg!(&fs);
+    //println!("FS:\n{}", &fs);
     fs.dirs_at_most(100000)
 }
 
+#[cfg(test)]
 const INPUT: &'static str = r#"$ cd /
 $ ls
 dir a
@@ -203,7 +203,7 @@ fn p1() {
 fn part2(input: &str) -> usize {
     let mut fs = Filesystem::new();
     input.lines().for_each(|l| {
-        println!("{l}");
+        //println!("{l}");
         let parts: Vec<_> = l.split(" ").collect();
         match parts.as_slice() {
             ["$", "cd", "/"] => (),
@@ -219,8 +219,8 @@ fn part2(input: &str) -> usize {
             _ => panic!("unexpected pattern: {}", l),
         };
     });
-    dbg!(&fs);
-    println!("FS:\n{}", &fs);
+    //dbg!(&fs);
+    //println!("FS:\n{}", &fs);
     let delta = 30000000 - (70000000 - fs.du());
     fs.smallest_above(delta)
 }
