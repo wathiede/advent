@@ -40,12 +40,23 @@ impl<'a> Filesystem<'a> {
             cwd: 0,
         }
     }
+    fn smallest_above(&self, size: usize) -> usize {
+        self.dirs
+            .iter()
+            .filter(|d| d.size >= size)
+            .map(|d| d.size)
+            .min()
+            .unwrap()
+    }
     fn dirs_at_most(&self, size: usize) -> usize {
         self.dirs
             .iter()
             .filter(|d| d.size <= size)
             .map(|d| d.size)
             .sum()
+    }
+    fn du(&self) -> usize {
+        self.dirs[0].size
     }
     fn mkdir(&mut self, path: &'a str) -> usize {
         let next_idx = self.dirs.len();
@@ -161,11 +172,7 @@ fn part1(input: &str) -> usize {
     fs.dirs_at_most(100000)
 }
 
-#[test]
-fn p1() {
-    assert_eq!(
-        part1(
-            r#"$ cd /
+const INPUT: &'static str = r#"$ cd /
 $ ls
 dir a
 14848514 b.txt
@@ -187,10 +194,37 @@ $ ls
 4060174 j
 8033020 d.log
 5626152 d.ext
-7214296 k"#
-        ),
-        95437
-    );
+7214296 k"#;
+#[test]
+fn p1() {
+    assert_eq!(part1(INPUT), 95437);
 }
-// #[aoc(day7, part2)]
-// fn part2(input: &str) -> usize { }
+#[aoc(day7, part2)]
+fn part2(input: &str) -> usize {
+    let mut fs = Filesystem::new();
+    input.lines().for_each(|l| {
+        println!("{l}");
+        let parts: Vec<_> = l.split(" ").collect();
+        match parts.as_slice() {
+            ["$", "cd", "/"] => (),
+            ["$", "cd", ".."] => fs.up(),
+            ["$", "cd", path] => {
+                fs.cd(path);
+            }
+            ["$", "ls"] => (),
+            ["dir", name] => {
+                fs.mkdir(name);
+            }
+            [size, name] => fs.touch(name, size.parse().expect("not a number")),
+            _ => panic!("unexpected pattern: {}", l),
+        };
+    });
+    dbg!(&fs);
+    println!("FS:\n{}", &fs);
+    let delta = 30000000 - (70000000 - fs.du());
+    fs.smallest_above(delta)
+}
+#[test]
+fn p2() {
+    assert_eq!(part2(INPUT), 24933642);
+}
