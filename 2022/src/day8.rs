@@ -41,74 +41,35 @@ fn part2(input: &str) -> usize {
         .map(|l| l.as_bytes().iter().map(|b| b - b'0').collect())
         .collect();
     let mut scores: Vec<Vec<usize>> = m.iter().map(|r| vec![0; r.len()]).collect();
-    let mut up: Vec<Vec<usize>> = m.iter().map(|r| vec![0; r.len()]).collect();
-    let mut left: Vec<Vec<usize>> = m.iter().map(|r| vec![0; r.len()]).collect();
-    let mut right: Vec<Vec<usize>> = m.iter().map(|r| vec![0; r.len()]).collect();
-    let mut down: Vec<Vec<usize>> = m.iter().map(|r| vec![0; r.len()]).collect();
     for y in 0..m.len() {
         for x in 0..m.len() {
             let h = m[y][x];
             // Up
-            up[y][x] = (0..y)
+            let up = (0..y)
                 .rev()
                 .position(|y1| m[y1][x] >= h)
                 .map(|v| v + 1)
                 .unwrap_or(y);
             // Left
-            left[y][x] = (0..x)
+            let left = (0..x)
                 .rev()
                 .position(|x1| m[y][x1] >= h)
                 .map(|v| v + 1)
                 .unwrap_or(x);
             // Right
-            right[y][x] = (x + 1..m.len())
+            let right = (x + 1..m.len())
                 .position(|x1| m[y][x1] >= h)
                 .map(|v| v + 1)
                 .unwrap_or(m.len() - x - 1);
             // Down
-            down[y][x] = (y + 1..m.len())
+            let down = (y + 1..m.len())
                 .position(|y1| m[y1][x] >= h)
                 .map(|v| v + 1)
                 .unwrap_or(m.len() - y - 1);
 
-            scores[y][x] = up[y][x] * left[y][x] * right[y][x] * down[y][x];
+            scores[y][x] = up * left * right * down;
         }
     }
-    // println!("Trees");
-    // m.iter().for_each(|r| {
-    //     r.iter().for_each(|v| print!("{v:4}"));
-    //     println!();
-    // });
-
-    //  println!("Up");
-    //  up.iter().for_each(|r| {
-    //      r.iter().for_each(|v| print!("{v:4}"));
-    //      println!();
-    //  });
-    // println!("Left");
-    // left.iter().for_each(|r| {
-    //     r.iter().for_each(|v| print!("{v:4}"));
-    //     println!();
-    // });
-    // println!("Right");
-    // right.iter().for_each(|r| {
-    //     r.iter().for_each(|v| print!("{v:4}"));
-    //     println!();
-    // });
-    // println!("Down");
-    // down.iter().for_each(|r| {
-    //     r.iter().for_each(|v| print!("{v:4}"));
-    //     println!();
-    // });
-
-    // println!("Scores");
-    // scores.iter().for_each(|r| {
-    //     r.iter().for_each(|v| print!("{v:4}"));
-    //     println!();
-    // });
-    // assert_eq!(scores[1][2], 4);
-    // assert_eq!(scores[3][2], 8);
-    // Not 1716
     scores
         .into_iter()
         .map(|r| r.into_iter().max().unwrap())
