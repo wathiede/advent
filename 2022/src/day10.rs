@@ -40,7 +40,63 @@ fn part1(input: &str) -> i32 {
 
 #[test]
 fn p1() {
-    let s = r#"addx 15
+    assert_eq!(part1(INPUT), 13140);
+}
+
+#[aoc(day10, part2)]
+fn part2(input: &str) -> String {
+    let mut it = input.lines();
+    let mut x = 1;
+    let mut output = Vec::with_capacity(4096);
+    let mut add: Option<i32> = None;
+    for cycle in 1i32.. {
+        let beam = (cycle - 1) % 40;
+        if (beam - x).abs() <= 1 {
+            output.push('#');
+        } else {
+            output.push('.');
+        }
+        if let Some(add) = add.take() {
+            x += add;
+            continue;
+        }
+
+        match it.next() {
+            Some(s) => match s {
+                "noop" => (),
+                addx => {
+                    let v = addx[addx.find(" ").expect("no space") + 1..]
+                        .parse()
+                        .expect("not a number");
+                    add = Some(v);
+                }
+            },
+            None => break,
+        }
+    }
+    output.truncate(output.len() - 1);
+    format!(
+        "\n{}",
+        output
+            .chunks(40)
+            .map(|c| c.iter().collect::<String>())
+            .collect::<Vec<String>>()
+            .join("\n")
+    )
+}
+
+#[test]
+fn p2() {
+    let want = r#"
+##..##..##..##..##..##..##..##..##..##..
+###...###...###...###...###...###...###.
+####....####....####....####....####....
+#####.....#####.....#####.....#####.....
+######......######......######......####
+#######.......#######.......#######....."#;
+    assert_eq!(part2(INPUT), want);
+}
+const INPUT: &'static str = r#"addx 15
 addx -11
 addx 6
 addx -3
@@ -186,8 +242,3 @@ addx -11
 noop
 noop
 noop"#;
-
-    assert_eq!(part1(s), 13140);
-}
-// #[aoc(day10, part2)]
-// fn part2(input: &str) -> usize { }
