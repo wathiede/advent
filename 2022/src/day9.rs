@@ -126,7 +126,11 @@ impl Grid {
 
 impl fmt::Display for Grid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.fmt_rope(f)
+        if f.alternate() {
+            self.fmt_rope(f)
+        } else {
+            self.fmt_visits(f)
+        }
     }
 }
 

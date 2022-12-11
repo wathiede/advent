@@ -89,7 +89,7 @@ fn part1(input: &str) -> usize {
         .split("\n\n")
         .map(|s| s.parse().expect("couldn't parse monkey"))
         .collect();
-    for round in 0..20 {
+    for _round in 0..20 {
         for i in 0..monkeys.len() {
             let mut trades = Vec::new();
             let m = &mut monkeys[i];
@@ -139,39 +139,6 @@ fn part1(input: &str) -> usize {
     monkeys[0].inspect_count * monkeys[1].inspect_count
 }
 
-const INPUT: &'static str = r#"Monkey 0:
-  Starting items: 79, 98
-  Operation: new = old * 19
-  Test: divisible by 23
-    If true: throw to monkey 2
-    If false: throw to monkey 3
-
-Monkey 1:
-  Starting items: 54, 65, 75, 74
-  Operation: new = old + 6
-  Test: divisible by 19
-    If true: throw to monkey 2
-    If false: throw to monkey 0
-
-Monkey 2:
-  Starting items: 79, 60, 97
-  Operation: new = old * old
-  Test: divisible by 13
-    If true: throw to monkey 1
-    If false: throw to monkey 3
-
-Monkey 3:
-  Starting items: 74
-  Operation: new = old + 3
-  Test: divisible by 17
-    If true: throw to monkey 0
-    If false: throw to monkey 1 "#;
-
-#[test]
-fn p1() {
-    assert_eq!(part1(INPUT), 10605);
-}
-
 #[aoc(day11, part2)]
 fn part2(input: &str) -> usize {
     let mut monkeys: Vec<Monkey> = input
@@ -180,7 +147,7 @@ fn part2(input: &str) -> usize {
         .collect();
     let primes: usize = monkeys.iter().map(|m| m.test_div).product();
     let prime_reduction = |i: usize| -> usize { i % primes };
-    for round in 0..10000 {
+    for _round in 0..10000 {
         for i in 0..monkeys.len() {
             let mut trades = Vec::new();
             let m = &mut monkeys[i];
@@ -188,7 +155,7 @@ fn part2(input: &str) -> usize {
                 let item = prime_reduction(item);
                 m.inspect_count += 1;
                 use Op::*;
-                let mut item = match m.op {
+                let item = match m.op {
                     Sq => item * item,
                     Add(n) => item + n,
                     Mul(n) => item * n,
@@ -230,7 +197,44 @@ fn part2(input: &str) -> usize {
     monkeys[0].inspect_count * monkeys[1].inspect_count
 }
 
-#[test]
-fn p2() {
-    assert_eq!(part2(INPUT), 2713310158);
+#[cfg(test)]
+mod tests {
+    use super::*;
+    const INPUT: &'static str = r#"Monkey 0:
+  Starting items: 79, 98
+  Operation: new = old * 19
+  Test: divisible by 23
+    If true: throw to monkey 2
+    If false: throw to monkey 3
+
+Monkey 1:
+  Starting items: 54, 65, 75, 74
+  Operation: new = old + 6
+  Test: divisible by 19
+    If true: throw to monkey 2
+    If false: throw to monkey 0
+
+Monkey 2:
+  Starting items: 79, 60, 97
+  Operation: new = old * old
+  Test: divisible by 13
+    If true: throw to monkey 1
+    If false: throw to monkey 3
+
+Monkey 3:
+  Starting items: 74
+  Operation: new = old + 3
+  Test: divisible by 17
+    If true: throw to monkey 0
+    If false: throw to monkey 1 "#;
+
+    #[test]
+    fn p1() {
+        assert_eq!(part1(INPUT), 10605);
+    }
+
+    #[test]
+    fn p2() {
+        assert_eq!(part2(INPUT), 2713310158);
+    }
 }

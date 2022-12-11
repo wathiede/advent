@@ -38,11 +38,6 @@ fn part1(input: &str) -> i32 {
     sum
 }
 
-#[test]
-fn p1() {
-    assert_eq!(part1(INPUT), 13140);
-}
-
 #[aoc(day10, part2)]
 fn part2(input: &str) -> String {
     let mut it = input.lines();
@@ -85,18 +80,27 @@ fn part2(input: &str) -> String {
     )
 }
 
-#[test]
-fn p2() {
-    let want = r#"
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn p1() {
+        assert_eq!(part1(INPUT), 13140);
+    }
+
+    #[test]
+    fn p2() {
+        let want = r#"
 ##..##..##..##..##..##..##..##..##..##..
 ###...###...###...###...###...###...###.
 ####....####....####....####....####....
 #####.....#####.....#####.....#####.....
 ######......######......######......####
 #######.......#######.......#######....."#;
-    assert_eq!(part2(INPUT), want);
-}
-const INPUT: &'static str = r#"addx 15
+        assert_eq!(part2(INPUT), want);
+    }
+    const INPUT: &'static str = r#"addx 15
 addx -11
 addx 6
 addx -3
@@ -242,3 +246,4 @@ addx -11
 noop
 noop
 noop"#;
+}
