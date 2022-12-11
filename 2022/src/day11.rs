@@ -101,7 +101,7 @@ fn part1(input: &str) -> usize {
                     Add(n) => item + n,
                     Mul(n) => item * n,
                 };
-                println!("r {} m {} i {}", round, i, item);
+                //println!("r {} m {} i {}", round, i, item);
                 item /= 3;
                 if item % m.test_div == 0 {
                     trades.push((m.true_idx, item));
@@ -113,6 +113,7 @@ fn part1(input: &str) -> usize {
                 monkeys[idx].recv(item);
             }
         }
+        /*
         println!("After round {}", round + 1);
         monkeys.iter().enumerate().for_each(|(i, m)| {
             println!(
@@ -125,13 +126,16 @@ fn part1(input: &str) -> usize {
                     .join(", ")
             )
         });
+        */
     }
     monkeys.sort_by(|m1, m2| m2.inspect_count.cmp(&m1.inspect_count));
+    /*
     monkeys
         .iter()
         .enumerate()
         .for_each(|(i, m)| println!("Monkey {} inspected items {} times.", i, m.inspect_count));
     dbg!(&monkeys);
+    */
     monkeys[0].inspect_count * monkeys[1].inspect_count
 }
 
@@ -168,5 +172,65 @@ fn p1() {
     assert_eq!(part1(INPUT), 10605);
 }
 
-// #[aoc(day11, part2)]
-// fn part2(input: &str) -> usize { }
+#[aoc(day11, part2)]
+fn part2(input: &str) -> usize {
+    let mut monkeys: Vec<Monkey> = input
+        .split("\n\n")
+        .map(|s| s.parse().expect("couldn't parse monkey"))
+        .collect();
+    let primes: usize = monkeys.iter().map(|m| m.test_div).product();
+    let prime_reduction = |i: usize| -> usize { i % primes };
+    for round in 0..10000 {
+        for i in 0..monkeys.len() {
+            let mut trades = Vec::new();
+            let m = &mut monkeys[i];
+            while let Some(item) = m.items.pop_front() {
+                let item = prime_reduction(item);
+                m.inspect_count += 1;
+                use Op::*;
+                let mut item = match m.op {
+                    Sq => item * item,
+                    Add(n) => item + n,
+                    Mul(n) => item * n,
+                };
+                //println!("r {} m {} i {}", round, i, item);
+                if item % m.test_div == 0 {
+                    trades.push((m.true_idx, item));
+                } else {
+                    trades.push((m.false_idx, item));
+                }
+            }
+            for (idx, item) in trades.into_iter() {
+                monkeys[idx].recv(item);
+            }
+        }
+        /*
+        println!("After round {}", round + 1);
+        monkeys.iter().enumerate().for_each(|(i, m)| {
+            println!(
+                "Monkey {}: {}",
+                i,
+                m.items
+                    .iter()
+                    .map(|i| i.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )
+        });
+        */
+    }
+    monkeys.sort_by(|m1, m2| m2.inspect_count.cmp(&m1.inspect_count));
+    /*
+    monkeys
+        .iter()
+        .enumerate()
+        .for_each(|(i, m)| println!("Monkey {} inspected items {} times.", i, m.inspect_count));
+    dbg!(&monkeys);
+    */
+    monkeys[0].inspect_count * monkeys[1].inspect_count
+}
+
+#[test]
+fn p2() {
+    assert_eq!(part2(INPUT), 2713310158);
+}
