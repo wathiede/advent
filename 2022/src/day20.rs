@@ -1,3 +1,4 @@
+use advent::prelude::*;
 use aoc_runner_derive::aoc;
 
 #[aoc(day20, part1)]
