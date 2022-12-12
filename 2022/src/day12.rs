@@ -3,7 +3,7 @@ use std::{cmp::Ordering, collections::BinaryHeap};
 use advent::prelude::*;
 use aoc_runner_derive::aoc;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Grid {
     cells: Vec<Vec<usize>>,
     width: usize,
@@ -200,8 +200,33 @@ fn part1(input: &str) -> isize {
     g.shortest_path().expect("failed to find path")
 }
 
-// #[aoc(day12, part2)]
-// fn part2(input: &str) -> usize { }
+#[aoc(day12, part2)]
+fn part2(input: &str) -> isize {
+    let mut g: Grid = input.parse().expect("grid");
+    //dbg!(&g);
+    let width = g.width;
+    let height = g.height;
+    let starts: Vec<_> = (0..height)
+        .flat_map(|y| {
+            let g = &g;
+            (0..width).filter_map(move |x| {
+                if g.cells[y][x] == 0 {
+                    Some((x, y))
+                } else {
+                    None
+                }
+            })
+        })
+        .collect();
+    starts
+        .iter()
+        .filter_map(|(x, y)| {
+            g.start = (*x, *y);
+            g.shortest_path()
+        })
+        .min()
+        .expect("couldn't find min")
+}
 
 #[cfg(test)]
 mod tests {
@@ -218,8 +243,8 @@ abdefghi
         assert_eq!(part1(INPUT), 31);
     }
 
-    //#[test]
-    //fn p2() {
-    //    assert_eq!(part2(INPUT), 42);
-    //}
+    #[test]
+    fn p2() {
+        assert_eq!(part2(INPUT), 29);
+    }
 }
