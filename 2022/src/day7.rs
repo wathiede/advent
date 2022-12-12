@@ -94,7 +94,7 @@ impl<'a> Filesystem<'a> {
     }
     fn touch(&mut self, path: &'a str, size: usize) {
         let cur = &mut self.dirs[self.cwd];
-        if cur.files.iter().position(|d| d.name == path).is_none() {
+        if !cur.files.iter().any(|d| d.name == path) {
             cur.files.push(File { name: path, size });
             // Walk up my parents adding size.
             let mut idx = cur.idx;
@@ -151,7 +151,7 @@ fn part1(input: &str) -> usize {
     let mut fs = Filesystem::new();
     input.lines().for_each(|l| {
         //println!("{l}");
-        let parts: Vec<_> = l.split(" ").collect();
+        let parts: Vec<_> = l.split(' ').collect();
         match parts.as_slice() {
             ["$", "cd", "/"] => (),
             ["$", "cd", ".."] => fs.up(),
@@ -163,7 +163,7 @@ fn part1(input: &str) -> usize {
                 fs.mkdir(name);
             }
             [size, name] => fs.touch(name, size.parse().expect("not a number")),
-            _ => panic!("unexpected pattern: {}", l),
+            _ => panic!("unexpected pattern: {l}"),
         };
     });
     //dbg!(&fs);
@@ -204,7 +204,7 @@ fn part2(input: &str) -> usize {
     let mut fs = Filesystem::new();
     input.lines().for_each(|l| {
         //println!("{l}");
-        let parts: Vec<_> = l.split(" ").collect();
+        let parts: Vec<_> = l.split(' ').collect();
         match parts.as_slice() {
             ["$", "cd", "/"] => (),
             ["$", "cd", ".."] => fs.up(),
@@ -216,7 +216,7 @@ fn part2(input: &str) -> usize {
                 fs.mkdir(name);
             }
             [size, name] => fs.touch(name, size.parse().expect("not a number")),
-            _ => panic!("unexpected pattern: {}", l),
+            _ => panic!("unexpected pattern: {l}"),
         };
     });
     //dbg!(&fs);

@@ -110,7 +110,7 @@ impl Grid {
                     if p == 0 {
                         write!(f, "H")?;
                     } else {
-                        write!(f, "{}", p)?;
+                        write!(f, "{p}")?;
                     }
                 } else if x == 0 && y == 0 {
                     write!(f, "s")?;
