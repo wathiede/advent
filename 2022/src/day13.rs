@@ -128,8 +128,42 @@ fn part1(input: &str) -> usize {
     v
 }
 
-// #[aoc(day13, part2)]
-// fn part2(input: &str) -> usize { }
+#[aoc(day13, part2)]
+fn part2(input: &str) -> usize {
+    let two = Value::from_str("[[2]]").expect("parse 2");
+    let six = Value::from_str("[[6]]").expect("parse 6");
+
+    let mut v: Vec<_> = input
+        .lines()
+        .filter_map(|l| {
+            if l.is_empty() {
+                return None;
+            }
+
+            Some(Value::from_str(l).expect("couldn't parse l"))
+        })
+        .chain([two, six])
+        .collect();
+
+    let two = Value::from_str("[[2]]").expect("parse 2");
+    let six = Value::from_str("[[6]]").expect("parse 6");
+    v.sort();
+    let v = v
+        .iter()
+        .enumerate()
+        .filter_map(|(i, v)| {
+            if v == &two || v == &six {
+                Some(i)
+            } else {
+                None
+            }
+        })
+        // Puzzle uses 1-based indexing
+        .map(|i| i + 1)
+        .product();
+    assert_ne!(v, 33434);
+    v
+}
 
 #[cfg(test)]
 mod tests {
@@ -140,7 +174,7 @@ mod tests {
 [[1],[2,3,4]]
 [[1],4]
 
-[10]
+[9]
 [[8,7,6]]
 
 [[4,4],4,4]
@@ -163,8 +197,8 @@ mod tests {
         assert_eq!(part1(INPUT), 13);
     }
 
-    //#[test]
-    //fn p2() {
-    //    assert_eq!(part2(INPUT), 42);
-    //}
+    #[test]
+    fn p2() {
+        assert_eq!(part2(INPUT), 140);
+    }
 }
