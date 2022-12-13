@@ -8,7 +8,7 @@ fn part1(input: &str) -> usize {
             if i == 0 || i == m.len() - 1 {
                 (1 << m.len()) - 1
             } else {
-                1 | (1 << m.len() - 1)
+                1 | (1 << (m.len() - 1))
             }
         })
         .collect();
