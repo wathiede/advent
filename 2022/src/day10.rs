@@ -26,7 +26,7 @@ fn part1(input: &str) -> i32 {
             Some(s) => match s {
                 "noop" => (),
                 addx => {
-                    let v = addx[addx.find(" ").expect("no space") + 1..]
+                    let v = addx[addx.find(' ').expect("no space") + 1..]
                         .parse()
                         .expect("not a number");
                     add = Some(v);
@@ -60,7 +60,7 @@ fn part2(input: &str) -> String {
             Some(s) => match s {
                 "noop" => (),
                 addx => {
-                    let v = addx[addx.find(" ").expect("no space") + 1..]
+                    let v = addx[addx.find(' ').expect("no space") + 1..]
                         .parse()
                         .expect("not a number");
                     add = Some(v);
