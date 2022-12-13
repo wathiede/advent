@@ -7,7 +7,7 @@ fn solve(input: &str, marker_len: usize) -> usize {
         .position(|chars| {
             chars
                 .iter()
-                .fold(0_u64, |bits, c| bits | (1 << c - b'A'))
+                .fold(0_u64, |bits, c| bits | (1 << (c - b'A')))
                 .count_ones()
                 == marker_len.try_into().unwrap()
         })
