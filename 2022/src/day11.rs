@@ -38,7 +38,7 @@ impl FromStr for Monkey {
             ["*", "old"] => Op::Sq,
             ["*", n] => Op::Mul(n.parse().expect("op num")),
             ["+", n] => Op::Add(n.parse().expect("op num")),
-            c => panic!("unknown {:?}", c),
+            c => panic!("unknown {c:?}",),
         };
 
         let test_div = it
