@@ -19,19 +19,7 @@ impl Ord for Value {
         let l = self;
         match (l, r) {
             (Int(l), Int(r)) => l.cmp(r),
-            (List(l), List(r)) => {
-                for i in 0..l.len().max(r.len()) {
-                    match (l.get(i), r.get(i)) {
-                        (None, _) => return Ordering::Less,
-                        (_, None) => return Ordering::Greater,
-                        (Some(lv), Some(rv)) => match lv.cmp(rv) {
-                            Ordering::Equal => (),
-                            c => return c,
-                        },
-                    }
-                }
-                Ordering::Equal
-            }
+            (List(l), List(r)) => l.cmp(r),
             (Int(l), List(_)) => List(vec![Int(*l)]).cmp(&r),
             (List(_), Int(r)) => l.cmp(&List(vec![Int(*r)])),
         }
