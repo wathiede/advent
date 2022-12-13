@@ -44,7 +44,7 @@ impl Play {
             (&Paper, "Y") => Play::Paper,
             (&Paper, "Z") => Play::Scissors,
 
-            (&Rock, _) | (&Scissors, _) | (&Paper, _) => panic!("Unknown play '{}'", s),
+            (&Rock, _) | (&Scissors, _) | (&Paper, _) => panic!("Unknown play '{s}'"),
         }
     }
 }
@@ -56,7 +56,7 @@ impl FromStr for Play {
             "A" | "X" => Ok(Play::Rock),
             "B" | "Y" => Ok(Play::Paper),
             "C" | "Z" => Ok(Play::Scissors),
-            _ => Err(format!("Unknown play: {}", s)),
+            _ => Err(format!("Unknown play: {s}")),
         }
     }
 }
