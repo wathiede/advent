@@ -7,7 +7,7 @@ pub struct Image {
 }
 
 impl Image {
-    fn kernel3x3<F>(&mut self, (x, y): (usize, usize), func: F)
+    pub fn kernel3x3<F>(&mut self, (x, y): (usize, usize), func: F)
     where
         F: Fn(u8) -> u8,
     {
