@@ -20,7 +20,7 @@ impl Ord for Value {
         match (l, r) {
             (Int(l), Int(r)) => l.cmp(r),
             (List(l), List(r)) => l.cmp(r),
-            (Int(l), List(_)) => List(vec![Int(*l)]).cmp(&r),
+            (Int(l), List(_)) => List(vec![Int(*l)]).cmp(r),
             (List(_), Int(r)) => l.cmp(&List(vec![Int(*r)])),
         }
     }
@@ -74,16 +74,16 @@ fn from_it<'a>(it: &mut Peekable<impl Iterator<Item = &'a u8>>) -> Value {
             }
         }
     }
-    return Value::List(vals);
+    Value::List(vals)
 }
 
 impl FromStr for Value {
     type Err = ();
     fn from_str(s: &str) -> Result<Value, ()> {
-        let mut it = s.as_bytes().into_iter().peekable();
+        let mut it = s.as_bytes().iter().peekable();
         // Hack, bug in parser, top level has extra nested list
         if let Value::List(l) = from_it(&mut it) {
-            Ok(l.into_iter().nth(0).expect("first"))
+            Ok(l.into_iter().next().expect("first"))
         } else {
             unreachable!("bug in parser")
         }
