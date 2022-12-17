@@ -4,12 +4,14 @@ use aoc_runner_derive::aoc;
 #[derive(Clone, Debug)]
 struct Grid {
     cells: HashMap<(isize, isize), char>,
+    not_becons: HashMap<isize, Vec<Range<isize>>>,
 }
 
 impl FromStr for Grid {
     type Err = ();
     fn from_str(s: &str) -> Result<Self, ()> {
         let mut cells: HashMap<(isize, isize), char> = HashMap::new();
+        let mut not_becons: HashMap<isize, Vec<Range<isize>>> = HashMap::new();
         s.lines().for_each(|l| {
             let parts = l
                 .split(|c: char| !c.is_digit(10) && c != '-')
@@ -22,36 +24,22 @@ impl FromStr for Grid {
             let by = parts[3];
             cells.insert((sx, sy), 'S');
             cells.insert((bx, by), 'B');
-            // TODO(wathiede): fill # for manhattan radius of S-B
             let r = manhattan_distance((sx, sy), (bx, by));
             //if sx == 8 && sy == 7 {
-            fill(&mut cells, (sx, sy), r)
+            for y in 0..r + 1 {
+                let xd = (r - y);
+                not_becons
+                    .entry(sy - y)
+                    .and_modify(|row| row.push(sx - xd..sx + xd + 1))
+                    .or_insert(vec![sx - xd..sx + xd + 1]);
+                not_becons
+                    .entry(sy + y)
+                    .and_modify(|row| row.push(sx - xd..sx + xd + 1))
+                    .or_insert(vec![sx - xd..sx + xd + 1]);
+            }
             //}
         });
-        Ok(Grid { cells })
-    }
-}
-
-fn fill(cells: &mut HashMap<(isize, isize), char>, c: (isize, isize), r: isize) {
-    for y in 0..r + 1 {
-        for x in 0..(r - y) + 1 {
-            let xy = (c.0 + x, c.1 + y);
-            if !cells.contains_key(&xy) {
-                cells.insert(xy, '#');
-            }
-            let xy = (c.0 - x, c.1 + y);
-            if !cells.contains_key(&xy) {
-                cells.insert(xy, '#');
-            }
-            let xy = (c.0 + x, c.1 - y);
-            if !cells.contains_key(&xy) {
-                cells.insert(xy, '#');
-            }
-            let xy = (c.0 - x, c.1 - y);
-            if !cells.contains_key(&xy) {
-                cells.insert(xy, '#');
-            }
-        }
+        Ok(Grid { cells, not_becons })
     }
 }
 
@@ -61,12 +49,16 @@ fn manhattan_distance(p1: (isize, isize), p2: (isize, isize)) -> isize {
 
 impl fmt::Display for Grid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let (min_no_beacons, max_no_beacons) = self
+            .not_becons
+            .keys()
+            .fold((isize::MAX, 0), |(min, max), k| (min.min(*k), max.max(*k)));
         let (width, height) = self.cells.keys().fold(
             ((isize::MAX..isize::MIN), (isize::MAX..isize::MIN)),
             |(w, h): (Range<isize>, Range<isize>), c: &(isize, isize)| {
                 (
                     c.0.min(w.start)..c.0.max(w.end),
-                    c.1.min(h.start)..c.1.max(h.end),
+                    c.1.min(h.start).min(min_no_beacons)..c.1.max(h.end).max(max_no_beacons),
                 )
             },
         );
@@ -75,7 +67,16 @@ impl fmt::Display for Grid {
             for x in width.start..width.end + 1 {
                 match self.cells.get(&(x, y)) {
                     Some(c) => write!(f, "{}", *c)?,
-                    None => write!(f, ".")?,
+                    None => match self.not_becons.get(&y) {
+                        Some(row) => {
+                            if row.iter().any(|r| r.contains(&x)) {
+                                write!(f, "#")?;
+                            } else {
+                                write!(f, ".")?;
+                            }
+                        }
+                        None => write!(f, ".")?,
+                    },
                 }
             }
             writeln!(f)?;
@@ -85,16 +86,19 @@ impl fmt::Display for Grid {
 }
 impl Grid {
     fn row_occupancy(&self, row: isize) -> usize {
-        self.cells
-            .iter()
-            .filter(|((_x, y), c)| y == &row && **c == '#')
-            .count()
+        let mut s = HashSet::new();
+        self.not_becons[&row].iter().for_each(|r| {
+            for i in r.start..r.end {
+                s.insert(i);
+            }
+        });
+        s.len() - self.cells.keys().filter(|(_, y)| *y == row).count()
     }
 }
 
 fn solve1(input: &str, row: isize) -> usize {
     let g: Grid = input.parse().expect("parse");
-    println!("Grid\n{g}");
+    //println!("Grid\n{g}");
     g.row_occupancy(row)
 }
 
