@@ -1,6 +1,11 @@
 use advent::prelude::*;
 use aoc_runner_derive::aoc;
 
+const VERBOSE: bool = false;
+macro_rules! vprint {
+    ($($x:tt)*) => { if VERBOSE { println!($($x)*); } }
+}
+
 // Pieces
 //
 // ####
@@ -41,15 +46,15 @@ impl Piece {
             Square => 2,
         }
     }
-    // Returns offsets from the lower left corner representing this piece
-    fn bits(&self) -> Box<dyn Iterator<Item = (usize, usize)>> {
+    // encodes each row as a nibble
+    fn bits(&self) -> u32 {
         use Piece::*;
         match self {
-            Dash => Box::new((0..4).map(|x| (x, 0))),
-            Plus => Box::new((0..3).map(|y| (1, y)).chain([(0, 1), (2, 1)])),
-            L => Box::new((0..2).map(|x| (x, 0)).chain((0..3).map(|y| (2, y)))),
-            I => Box::new((0..4).map(|y| (0, y))),
-            Square => Box::new((0..2).flat_map(|x| (0..2).map(move |y| (x, y)))),
+            Dash => 0b1111,
+            Plus => 0b0010_0111_0010,
+            L => 0b0100_0100_0111,
+            I => 0b0001_0001_0001_0001,
+            Square => 0b0011_0011,
         }
     }
 }
@@ -86,19 +91,19 @@ impl Chamber {
     fn step(&mut self, jet: char) -> State {
         let p = match self.cur_piece {
             Some(p) => {
-                println!("Continuing @ {:?}\n{}", self.pos, self);
+                vprint!("Continuing @ {:?}\n{}", self.pos, self);
                 p
             }
             None => {
                 let p = self.pieces.next().unwrap();
                 self.cur_piece = Some(p);
                 let zeros = self.stack.iter().rev().take_while(|&v| *v == 0).count();
-                println!("{zeros} empty layers");
+                vprint!("{zeros} empty layers");
                 let delta = if zeros <= 3 { 3 - zeros + 1 } else { 0 };
-                println!("Adding {delta} empty layers");
+                vprint!("Adding {delta} empty layers");
                 self.stack.extend((0..delta).map(|_| 0));
                 self.pos = (2, self.stack.len() - 1);
-                println!("A new rock begins falling @ {:?}\n{}", self.pos, self);
+                vprint!("A new rock begins falling @ {:?}\n{}", self.pos, self);
                 p
             }
         };
@@ -106,52 +111,66 @@ impl Chamber {
         match jet {
             '<' => {
                 if self.pos.0 > 0 && !self.hit(self.pos.0 - 1, self.pos.1) {
-                    println!("Jet of gas pushes rock left:");
+                    vprint!("Jet of gas pushes rock left:");
                     self.pos = (self.pos.0 - 1, self.pos.1);
                 } else {
-                    println!("Jet of gas pushes rock left, but nothing happens:");
+                    vprint!("Jet of gas pushes rock left, but nothing happens:");
                 }
             }
             '>' => {
                 if (self.pos.0 + p.width()) < 7 && !self.hit(self.pos.0 + 1, self.pos.1) {
-                    println!("Jet of gas pushes rock right:");
+                    vprint!("Jet of gas pushes rock right:");
                     self.pos = (self.pos.0 + 1, self.pos.1);
                 } else {
-                    println!("Jet of gas pushes rock right, but nothing happens:");
+                    vprint!("Jet of gas pushes rock right, but nothing happens:");
                 }
             }
             c => panic!("Unknown {c}"),
         }
-        println!("{}", self);
+        vprint!("{}", self);
         // If at bottom, or hit an object, rest.
         if self.pos.1 == 0 || self.hit(self.pos.0, self.pos.1 - 1) {
-            println!("Rock falls 1 unit, causing it to come to rest:");
+            vprint!("Rock falls 1 unit, causing it to come to rest:");
             // fill in stack with bits.
             let max_y = self.stack.len();
-            for (x, y) in p
-                .bits()
-                .map(|(x, y)| (x + self.pos.0, y + self.pos.1))
-                .filter(|(_x, y)| y < &max_y)
-            {
-                println!("setting ({x},{y})");
-                self.stack[y] |= (1 << x);
-            }
+            let pat = p.bits();
+            let y0: u8 = ((pat >> 0) & 0b1111).try_into().unwrap();
+            let y1: u8 = ((pat >> 4) & 0b1111).try_into().unwrap();
+            let y2: u8 = ((pat >> 8) & 0b1111).try_into().unwrap();
+            let y3: u8 = ((pat >> 12) & 0b1111).try_into().unwrap();
+
+            self.stack[self.pos.1 + 0] |= y0 << self.pos.0;
+            self.stack[self.pos.1 + 1] |= y1 << self.pos.0;
+            self.stack[self.pos.1 + 2] |= y2 << self.pos.0;
+            self.stack[self.pos.1 + 3] |= y3 << self.pos.0;
             // Reset the piece
             self.cur_piece = None;
             State::Rest
         } else {
             // Else fall
-            println!("Rock falls 1 unit:");
+            vprint!("Rock falls 1 unit:");
             self.pos = (self.pos.0, self.pos.1 - 1);
             State::Move
         }
     }
     fn hit(&self, x: usize, y: usize) -> bool {
+        let x: u8 = x.try_into().expect("x");
         if let Some(p) = self.cur_piece {
-            p.bits()
-                .map(|(x2, y2)| (x + x2, y + y2))
-                .filter(|(_x, y)| y < &self.stack.len())
-                .any(|(x, y)| (self.stack[y] & (1 << x)) != 0)
+            let pat = p.bits();
+            let y0: u8 = ((pat >> 0) & 0b1111).try_into().unwrap();
+            let y1: u8 = ((pat >> 4) & 0b1111).try_into().unwrap();
+            let y2: u8 = ((pat >> 8) & 0b1111).try_into().unwrap();
+            let y3: u8 = ((pat >> 12) & 0b1111).try_into().unwrap();
+            let s = &self.stack[y..];
+            match s.len() {
+                0 => panic!("empty stack"),
+                1 => s[0] & (y0 << x) != 0,
+                2 => (s[0] & (y0 << x) | s[1] & (y1 << x)) != 0,
+                3 => (s[0] & (y0 << x) | s[1] & (y1 << x) | s[2] & (y2 << x)) != 0,
+                _ => {
+                    (s[0] & (y0 << x) | s[1] & (y1 << x) | s[2] & (y2 << x) | s[3] & (y3 << x)) != 0
+                }
+            }
         } else {
             panic!("hit called with no current piece");
         }
@@ -164,18 +183,38 @@ impl Chamber {
 impl fmt::Display for Chamber {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // Uncomment to run fast enough for an answer
-        return Ok(());
-        let piece = if let Some(p) = self.cur_piece {
-            p.bits()
-                .map(|(x, y)| (self.pos.0 + x, self.pos.1 + y))
-                .collect()
+        //return Ok(());
+        let (y0, y1, y2, y3) = if let Some(p) = self.cur_piece {
+            let pat = p.bits();
+            let y0: u8 = ((pat >> 0) & 0b1111).try_into().unwrap();
+            let y1: u8 = ((pat >> 4) & 0b1111).try_into().unwrap();
+            let y2: u8 = ((pat >> 8) & 0b1111).try_into().unwrap();
+            let y3: u8 = ((pat >> 12) & 0b1111).try_into().unwrap();
+            (y0, y1, y2, y3)
         } else {
-            HashSet::new()
+            (0, 0, 0, 0)
         };
+
+        println!("pos.1 {}", self.pos.1);
+        println!("y0 {y0:08b}");
+        println!("y1 {y1:08b}");
+        println!("y2 {y2:08b}");
+        println!("y3 {y3:08b}");
+        let y0 = y0 << self.pos.0;
+        let y1 = y1 << self.pos.0;
+        let y2 = y2 << self.pos.0;
+        let y3 = y3 << self.pos.0;
+
         for (y, layer) in self.stack.iter().enumerate().rev() {
             write!(f, "|")?;
-            for b in (0..7) {
-                if piece.contains(&(b as usize, y)) {
+            for b in 0..7 {
+                if y == self.pos.1 && (y0 & (1 << b)) != 0 {
+                    write!(f, "@")?;
+                } else if y == self.pos.1 + 1 && (y1 & (1 << b)) != 0 {
+                    write!(f, "@")?;
+                } else if y == self.pos.1 + 2 && (y2 & (1 << b)) != 0 {
+                    write!(f, "@")?;
+                } else if y == self.pos.1 + 3 && (y3 & (1 << b)) != 0 {
                     write!(f, "@")?;
                 } else if layer & (1 << b) == 0 {
                     write!(f, ".")?;
@@ -198,7 +237,7 @@ fn part1(input: &str) -> usize {
     let mut jets = input.chars().cycle();
     // TODO remove upper bound
     for steps in 0.. {
-        //println!("Step {steps} Rocks {rocks} Last Rest {last_rest}");
+        vprint!("Step {steps} Rocks {rocks} Last Rest {last_rest}");
         match ch.step(jets.next().unwrap()) {
             State::Rest => {
                 rocks += 1;
@@ -222,8 +261,40 @@ fn part1(input: &str) -> usize {
     ch.tallest()
 }
 
-// #[aoc(day17, part2)]
-// fn part2(input: &str) -> usize { }
+#[aoc(day17, part2)]
+fn part2(input: &str) -> usize {
+    let mut ch = Chamber::default();
+    let mut rocks = 0usize;
+    let mut steps = 0;
+    let mut last_rest = 0;
+    let mut jets = input.chars().cycle();
+    // TODO remove upper bound
+    for steps in 0.. {
+        vprint!("Step {steps} Rocks {rocks} Last Rest {last_rest}");
+        match ch.step(jets.next().unwrap()) {
+            State::Rest => {
+                rocks += 1;
+                last_rest = 0;
+                if rocks % 100000000 == 0 {
+                    println!("Rocks {rocks}");
+                }
+                if rocks == 1000000000000 {
+                    break;
+                }
+            }
+            State::Move => {
+                last_rest += 1;
+                if last_rest > ch.stack.len() {
+                    panic!(
+                        "Too many steps, {last_rest} since last rest in stack of {}",
+                        ch.stack.len()
+                    );
+                }
+            }
+        }
+    }
+    ch.tallest()
+}
 
 #[cfg(test)]
 mod tests {
@@ -235,8 +306,8 @@ mod tests {
         assert_eq!(part1(INPUT), 3068);
     }
 
-    //#[test]
-    //fn p2() {
-    //    assert_eq!(part2(INPUT), 42);
-    //}
+    #[test]
+    fn p2() {
+        assert_eq!(part2(INPUT), 1514285714288);
+    }
 }
