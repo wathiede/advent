@@ -14,7 +14,11 @@ pub mod prelude {
     pub use anyhow::Result;
     pub use thiserror::Error;
 
-    pub use crate::image::Image;
+    pub use crate::{image::Image, vprint};
 }
 
 mod image;
+#[macro_export]
+macro_rules! vprint {
+    ($($x:tt)*) => { if VERBOSE { println!($($x)*); } }
+}

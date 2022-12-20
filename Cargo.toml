@@ -14,3 +14,4 @@ thiserror = "1.0.30"
 
 [lib]
 name = "advent"
+
