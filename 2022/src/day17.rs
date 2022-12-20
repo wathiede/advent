@@ -1,11 +1,6 @@
 use advent::prelude::*;
 use aoc_runner_derive::aoc;
 
-const VERBOSE: bool = false;
-macro_rules! vprint {
-    ($($x:tt)*) => { if VERBOSE { println!($($x)*); } }
-}
-
 // Pieces
 //
 // ####
