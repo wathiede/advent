@@ -26,7 +26,7 @@ macro_rules! vprint {
 // ##
 // ##
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 enum Piece {
     Dash,
     Plus,
@@ -83,7 +83,7 @@ impl Default for Chamber {
 }
 
 enum State {
-    Rest,
+    Rest(Piece),
     Move,
 }
 
@@ -145,7 +145,7 @@ impl Chamber {
             self.stack[self.pos.1 + 3] |= y3 << self.pos.0;
             // Reset the piece
             self.cur_piece = None;
-            State::Rest
+            State::Rest(p)
         } else {
             // Else fall
             vprint!("Rock falls 1 unit:");
@@ -239,7 +239,7 @@ fn part1(input: &str) -> usize {
     for steps in 0.. {
         vprint!("Step {steps} Rocks {rocks} Last Rest {last_rest}");
         match ch.step(jets.next().unwrap()) {
-            State::Rest => {
+            State::Rest(_last_piece) => {
                 rocks += 1;
                 last_rest = 0;
                 if rocks == 2022 {
@@ -267,12 +267,18 @@ fn part2(input: &str) -> usize {
     let mut rocks = 0usize;
     let mut steps = 0;
     let mut last_rest = 0;
+    let input_len = input.len();
+    dbg!(&input_len);
     let mut jets = input.chars().cycle();
     // TODO remove upper bound
     for steps in 0.. {
         vprint!("Step {steps} Rocks {rocks} Last Rest {last_rest}");
         match ch.step(jets.next().unwrap()) {
-            State::Rest => {
+            State::Rest(last_piece) => {
+                assert!(
+                    !(((steps % input_len) == 0) && last_piece == Piece::Square),
+                    "last piece was a square when input restarted at {steps}"
+                );
                 rocks += 1;
                 last_rest = 0;
                 if rocks % 100000000 == 0 {
