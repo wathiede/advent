@@ -23,6 +23,7 @@ fn part1(input: &[i64]) -> String {
             res += 1;
         }
     }
+    // Answer for my data: 1048
     res.to_string()
 }
 
@@ -31,9 +32,8 @@ fn part2(input: &[i64]) -> String {
     let mut cur = 50;
     let mut res = 0;
     for i in input {
-        let rem = i.abs();
         let dir = i.signum();
-        for _ in 0..rem {
+        for _ in 0..i.abs() {
             cur += dir;
             if cur < 0 {
                 cur += 100;
@@ -46,7 +46,7 @@ fn part2(input: &[i64]) -> String {
             }
         }
     }
-    assert!(6503 > res); // too high
+    // Answer for my data: 6498
     res.to_string()
 }
 
