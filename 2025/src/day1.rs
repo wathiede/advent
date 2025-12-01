@@ -19,7 +19,6 @@ fn part1(input: &[i64]) -> String {
             cur += 100;
         }
         cur %= 100;
-        println!("cur: {cur}");
         if cur == 0 {
             res += 1;
         }
@@ -29,7 +28,26 @@ fn part1(input: &[i64]) -> String {
 
 #[aoc(day1, part2)]
 fn part2(input: &[i64]) -> String {
-    todo!()
+    let mut cur = 50;
+    let mut res = 0;
+    for i in input {
+        let rem = i.abs();
+        let dir = i.signum();
+        for _ in 0..rem {
+            cur += dir;
+            if cur < 0 {
+                cur += 100;
+            }
+            if cur > 0 {
+                cur -= 100;
+            }
+            if cur == 0 {
+                res += 1;
+            }
+        }
+    }
+    assert!(6503 > res); // too high
+    res.to_string()
 }
 
 #[cfg(test)]
@@ -53,7 +71,7 @@ L82"#;
 
     #[test]
     fn part2_example() {
-        assert_eq!(part2(&parse("<EXAMPLE>")), "<RESULT>");
+        assert_eq!(part2(&parse(INPUT)), "6");
     }
 }
 
