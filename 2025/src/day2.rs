@@ -43,7 +43,7 @@ fn is_pattern_part2(s: &str) -> bool {
     for i in 1..=l {
         let needle = &b[..i];
         //println!("needle {}", String::from_utf8_lossy(b));
-        if b.chunks(i).all(|c| c == needle) {
+        if b.chunks(i).skip(1).all(|c| c == needle) {
             return true;
         }
     }
