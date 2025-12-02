@@ -37,9 +37,37 @@ fn part1(input: &[RangeInclusive<u64>]) -> String {
     // Answer: 18893502033
 }
 
+fn is_pattern_part2(s: &str) -> bool {
+    let b = s.as_bytes();
+    let l = b.len() / 2;
+    for i in 1..=l {
+        let needle = &b[..i];
+        //println!("needle {}", String::from_utf8_lossy(b));
+        if b.chunks(i).all(|c| c == needle) {
+            return true;
+        }
+    }
+    false
+}
 #[aoc(day2, part2)]
 fn part2(input: &[RangeInclusive<u64>]) -> String {
-    todo!()
+    input
+        .iter()
+        .map(|r| {
+            // TODO: why clone?
+            r.clone()
+                .filter_map(|n| {
+                    let s = n.to_string();
+                    if is_pattern_part2(&s) {
+                        return Some(n);
+                    }
+                    return None;
+                })
+                .sum::<u64>()
+        })
+        .sum::<u64>()
+        .to_string()
+    // Answer: 26202168557
 }
 
 #[cfg(test)]
@@ -53,10 +81,8 @@ mod tests {
         assert_eq!(part1(&parse(INPUT)), "1227775554");
     }
 
-    /*
     #[test]
     fn part2_example() {
-        assert_eq!(part2(&parse("<EXAMPLE>")), "<RESULT>");
+        assert_eq!(part2(&parse(INPUT)), "4174379265");
     }
-    */
 }
