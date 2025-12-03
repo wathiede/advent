@@ -5,6 +5,16 @@ fn parse(input: &str) -> String {
 }
 
 fn max_p(bytes: &[u8]) -> (u8, isize) {
+    /*
+    println!(
+        "max_p({})",
+        bytes
+            .iter()
+            .map(|b| (*b as char).to_string())
+            .collect::<Vec<_>>()
+            .join("")
+    );
+    */
     bytes
         .iter()
         .enumerate()
@@ -25,11 +35,26 @@ fn part1(input: &str) -> String {
         })
         .sum::<usize>()
         .to_string()
+    // Answer: 17196
 }
 
 #[aoc(day3, part2)]
 fn part2(input: &str) -> String {
-    todo!()
+    input
+        .lines()
+        .map(|l| {
+            let mut l = l.as_bytes();
+            let mut jolt = 0usize;
+            for i in 0..12 {
+                let (first, idx) = max_p(&l[..l.len() - (11 - i)]);
+                l = &l[(-idx as usize) + 1..];
+                jolt = jolt * 10 + ((first - b'0') as usize);
+            }
+            jolt
+        })
+        .sum::<usize>()
+        .to_string()
+    // Answer: 171039099596062
 }
 
 #[cfg(test)]
@@ -46,10 +71,8 @@ mod tests {
         assert_eq!(part1(&parse(INPUT)), "357");
     }
 
-    /*
     #[test]
     fn part2_example() {
-        assert_eq!(part2(&parse("<EXAMPLE>")), "<RESULT>");
+        assert_eq!(part2(&parse(INPUT)), "3121910778619");
     }
-    */
 }
