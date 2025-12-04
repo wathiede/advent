@@ -12,25 +12,45 @@ fn parse(input: &str) -> Vec<RangeInclusive<u64>> {
         .collect()
 }
 
+fn pattern_part1(i: &u64) -> bool {
+    // Even number of digits can't be a pattern
+    // Even because log10(5) == 0, log10(15) == 1 log10(150) == 2 log10(1500) = 3
+    if i.ilog10() % 2 == 0 {
+        return false;
+    }
+    let s = i.to_string();
+    let len = s.len();
+    s[..len / 2] == s[len / 2..]
+}
+
 #[aoc(day2, part1)]
 fn part1(input: &[RangeInclusive<u64>]) -> String {
     input
         .iter()
         .map(|r| {
-            // TODO: why clone?
-            r.clone()
-                .filter_map(|n| {
-                    let s = n.to_string();
-                    let len = s.len();
-                    if len % 2 == 1 {
-                        return None;
-                    };
-                    if s[..len / 2] == s[len / 2..] {
-                        return Some(n);
-                    }
-                    return None;
-                })
-                .sum::<u64>()
+            let mut total = 0;
+            // Check endpoints
+            let s = r.start();
+            let e = r.end();
+
+            // Then iterate over the high half of digits
+            let l10 = e.ilog10();
+            let trunc = 10u32.pow((l10 + 1) / 2) as u64;
+            let trunc_s = s / trunc;
+            let trunc_e = (e + 1) / trunc;
+            //println!( "s:{:10} e:{:10} l10:{} trunc:{} {} {}", s, e, l10, trunc, trunc_s, trunc_e);
+            for upper in trunc_s..=trunc_e {
+                if upper == 0 {
+                    continue;
+                }
+                let v = upper * trunc + upper;
+
+                if pattern_part1(&v) && r.contains(&v) {
+                    //println!(" pattern:{v_str}");
+                    total += v;
+                }
+            }
+            total
         })
         .sum::<u64>()
         .to_string()
