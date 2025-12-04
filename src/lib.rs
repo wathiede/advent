@@ -14,11 +14,20 @@ pub mod prelude {
     pub use anyhow::Result;
     pub use thiserror::Error;
 
-    pub use crate::{image::Image, vprint};
+    pub use crate::{image::Image, input_for, vprint};
 }
 
 mod image;
 #[macro_export]
 macro_rules! vprint {
     ($($x:tt)*) => { if VERBOSE { println!($($x)*); } }
+}
+
+pub fn input_for(year: u16, day: u16) -> String {
+    let path = format!("input/{year}/day{day}.txt");
+    let mut s =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("failed to read {path}: {e}"));
+    // String newline at end of file
+    s.truncate(s.len() - 1);
+    s
 }

@@ -72,6 +72,8 @@ fn part2(input: &[RangeInclusive<u64>]) -> String {
 
 #[cfg(test)]
 mod tests {
+    use advent::prelude::*;
+
     use super::*;
 
     const INPUT: &'static str = "11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124";
@@ -79,10 +81,12 @@ mod tests {
     #[test]
     fn part1_example() {
         assert_eq!(part1(&parse(INPUT)), "1227775554");
+        assert_eq!(part1(&parse(&input_for(2025, 2))), "18893502033");
     }
 
     #[test]
     fn part2_example() {
         assert_eq!(part2(&parse(INPUT)), "4174379265");
+        assert_eq!(part2(&parse(&input_for(2025, 2))), "26202168557");
     }
 }
