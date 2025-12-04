@@ -1,12 +1,31 @@
 use crate::prelude::*;
 
 pub struct Image {
-    width: usize,
-    height: usize,
+    pub width: usize,
+    pub height: usize,
     pixels: Vec<u8>,
 }
 
 impl Image {
+    pub fn get(&self, x: isize, y: isize) -> Option<u8> {
+        if x < 0 || x as usize >= self.width {
+            return None;
+        }
+        if y < 0 || y as usize >= self.height {
+            return None;
+        }
+        Some(self[(x as usize, y as usize)])
+    }
+    pub fn kernel3x3_all<F>(&mut self, func: F)
+    where
+        F: Fn(u8) -> u8,
+    {
+        for y in 0..self.height {
+            for x in 0..self.width {
+                self.kernel3x3((x, y), &func)
+            }
+        }
+    }
     pub fn kernel3x3<F>(&mut self, (x, y): (usize, usize), func: F)
     where
         F: Fn(u8) -> u8,
