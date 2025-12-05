@@ -17,6 +17,25 @@ impl Image {
         }
         Some(self[(x as usize, y as usize)])
     }
+    /// Visits up to 8 neighbors, ignoring cells out of bounds
+    pub fn visit_neighbors<MAP, REDUCE, T, U>(
+        &self,
+        (x, y): (isize, isize),
+        compute: MAP,
+        mut acc: REDUCE,
+    ) where
+        MAP: Fn(u8) -> T,
+        REDUCE: FnMut(T) -> U,
+    {
+        for j in -1..=1 {
+            for i in -1..=1 {
+                if i == 0 && j == 0 {
+                    continue;
+                }
+                self.get(x + i, y + j).map(|b| acc(compute(b)));
+            }
+        }
+    }
     pub fn kernel3x3_all<F>(&mut self, func: F)
     where
         F: Fn(u8) -> u8,
@@ -111,5 +130,19 @@ impl Index<(usize, usize)> for Image {
 impl IndexMut<(usize, usize)> for Image {
     fn index_mut(&mut self, (x, y): (usize, usize)) -> &mut Self::Output {
         &mut self.pixels[x + y * self.width]
+    }
+}
+
+mod tests {
+    use super::*;
+    #[test]
+    fn test_visit_neighbors() {
+        let input = r#"111
+111
+111"#;
+        let im: Image = input.parse().expect("failed to parse image");
+        let mut sum = 0;
+        im.visit_neighbors((1, 1), |b| b - b'0', |b| sum += b);
+        assert_eq!(sum, 8);
     }
 }
