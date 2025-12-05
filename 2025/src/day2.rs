@@ -38,17 +38,22 @@ fn part1(input: &[RangeInclusive<u64>]) -> String {
             let trunc = 10u32.pow((l10 + 1) / 2) as u64;
             let trunc_s = s / trunc;
             let trunc_e = (e + 1) / trunc;
-            //println!( "s:{:10} e:{:10} l10:{} trunc:{} {} {}", s, e, l10, trunc, trunc_s, trunc_e);
+            /*
+            println!(
+                "s:{:10} e:{:10} l10:{} trunc:{} {} {}",
+                s, e, l10, trunc, trunc_s, trunc_e
+            );
+            */
             for upper in trunc_s..=trunc_e {
                 if upper == 0 {
                     continue;
                 }
-                let v = upper * trunc + upper;
-
-                if pattern_part1(&v) && r.contains(&v) {
-                    //println!(" pattern:{v_str}");
-                    total += v;
+                let v = upper * (10u32.pow(upper.ilog10() + 1) as u64) + upper;
+                if !r.contains(&v) {
+                    continue;
                 }
+
+                total += v;
             }
             total
         })
