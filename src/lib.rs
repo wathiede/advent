@@ -14,10 +14,12 @@ pub mod prelude {
     pub use anyhow::Result;
     pub use thiserror::Error;
 
-    pub use crate::{image::Image, input_for, vprint};
+    pub use crate::{image::Image, input_for, parsers::range_inclusive, vprint};
 }
 
 mod image;
+pub mod parsers;
+
 #[macro_export]
 macro_rules! vprint {
     ($($x:tt)*) => { if VERBOSE { println!($($x)*); } }
