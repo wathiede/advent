@@ -12,17 +12,6 @@ fn parse(input: &str) -> Vec<RangeInclusive<u64>> {
         .collect()
 }
 
-fn pattern_part1(i: &u64) -> bool {
-    // Even number of digits can't be a pattern
-    // Even because log10(5) == 0, log10(15) == 1 log10(150) == 2 log10(1500) = 3
-    if i.ilog10() % 2 == 0 {
-        return false;
-    }
-    let s = i.to_string();
-    let len = s.len();
-    s[..len / 2] == s[len / 2..]
-}
-
 #[aoc(day2, part1)]
 fn part1(input: &[RangeInclusive<u64>]) -> String {
     input
