@@ -133,8 +133,10 @@ impl IndexMut<(usize, usize)> for Image {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn test_visit_neighbors() {
         let input = r#"111
