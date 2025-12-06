@@ -68,7 +68,6 @@ fn part2(input: &[RangeInclusive<u64>]) -> String {
     input
         .iter()
         .map(|r| {
-            // TODO: why clone?
             r.clone()
                 .filter_map(|n| {
                     let s = n.to_string();
