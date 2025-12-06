@@ -67,11 +67,12 @@ L82"#;
     #[test]
     fn part1_example() {
         assert_eq!(part1(&parse(INPUT)), "3");
+        assert_eq!(part1(&parse(&input_for(2025, 1))), "1048");
     }
 
     #[test]
     fn part2_example() {
         assert_eq!(part2(&parse(INPUT)), "6");
+        assert_eq!(part2(&parse(&input_for(2025, 1))), "6498");
     }
 }
-
