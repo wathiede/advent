@@ -7,19 +7,9 @@ fn parse(input: &str) -> String {
 
 #[aoc(day5, part1)]
 fn part1(input: &str) -> String {
-    let mut it = input.lines();
-    let mut ranges = Vec::new();
-    loop {
-        let l = it.next().expect("failed to get db line");
-        if l.is_empty() {
-            break;
-        }
-
-        let (lo, hi) = l.split_once('-').expect("failed to split -");
-        ranges.push(lo.parse::<u64>().expect("lo failed")..=hi.parse::<u64>().expect("hi failed"));
-    }
+    let (ranges, remainder) = range_inclusive(input).expect("failed to parse input");
     let mut cnt = 0;
-    while let Some(id) = it.next() {
+    for id in remainder.lines() {
         let id: u64 = id.parse().expect("failed to parse id");
         for r in &ranges {
             if r.contains(&id) {
@@ -50,17 +40,7 @@ fn merge_ranges(mut ranges: Vec<RangeInclusive<u64>>) -> Vec<RangeInclusive<u64>
 
 #[aoc(day5, part2)]
 fn part2(input: &str) -> String {
-    let mut it = input.lines();
-    let mut ranges = Vec::new();
-    loop {
-        let l = it.next().expect("failed to get db line");
-        if l.is_empty() {
-            break;
-        }
-
-        let (lo, hi) = l.split_once('-').expect("failed to split -");
-        ranges.push(lo.parse::<u64>().expect("lo failed")..=hi.parse::<u64>().expect("hi failed"));
-    }
+    let (ranges, _) = range_inclusive(input).expect("failed to parse input");
     let ranges = merge_ranges(ranges);
     let mut cnt = 0;
     for r in ranges {
@@ -94,4 +74,3 @@ mod tests {
         assert_eq!(part2(&parse(INPUT)), "14");
     }
 }
-
