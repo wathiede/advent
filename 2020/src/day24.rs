@@ -107,16 +107,16 @@ impl std::str::FromStr for Tile {
                 b'n' => match it.next().unwrap() {
                     b'e' => directions.push(NorthEast),
                     b'w' => directions.push(NorthWest),
-                    c => panic!(format!("unexpected tile direction {}", c)),
+                    c => panic!("unexpected tile direction {}", c),
                 },
                 b's' => match it.next().unwrap() {
                     b'e' => directions.push(SouthEast),
                     b'w' => directions.push(SouthWest),
-                    c => panic!(format!("unexpected tile direction {}", c)),
+                    c => panic!("unexpected tile direction {}", c),
                 },
                 b'e' => directions.push(East),
                 b'w' => directions.push(West),
-                c => panic!(format!("unexpected tile direction {}", c)),
+                c => panic!("unexpected tile direction {}", c),
             }
         }
         Ok(Tile { directions })

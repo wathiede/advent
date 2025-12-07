@@ -152,7 +152,7 @@ fn solution1(jolts: &[usize]) -> usize {
         match second - first {
             1 => (one + 1, three),
             3 => (one, three + 1),
-            d => panic!(format!("unexpected diff: {} - {} = {}", second, first, d)),
+            d => panic!("unexpected diff: {} - {} = {}", second, first, d),
         }
     });
     one * three

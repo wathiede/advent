@@ -87,7 +87,7 @@ impl From<i32> for Orientation {
             1 => Orientation::East,
             2 => Orientation::South,
             3 => Orientation::West,
-            c => panic!(format!("Should never see orientation of {}", c)),
+            c => panic!("Should never see orientation of {}", c),
         }
     }
 }

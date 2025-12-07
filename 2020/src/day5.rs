@@ -79,7 +79,7 @@ impl FromStr for Seat {
                 c_start += c_size;
                 c_size /= 2;
             }
-            c => panic!(format!("unexpected character '{}'", c)),
+            c => panic!("unexpected character '{}'", c),
         });
         Ok(Seat {
             row: r_start,
@@ -111,7 +111,7 @@ fn solution1_glenng(input: &str) -> u32 {
             s.chars().fold(0, |s, c| match c {
                 'F' | 'L' => s << 1,
                 'B' | 'R' => s << 1 | 1,
-                _ => panic!(format!("unexpected character '{}'", c)),
+                _ => panic!("unexpected character '{}'", c),
             })
         })
         .map(|s| {

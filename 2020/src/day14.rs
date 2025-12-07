@@ -115,7 +115,7 @@ impl FromStr for Mask {
                 mask <<= 1;
                 value <<= 1;
             }
-            c => panic!(format!("Unhandled mask character '{}'", c)),
+            c => panic!("Unhandled mask character '{}'", c),
         });
         Ok(Mask { mask, value })
     }

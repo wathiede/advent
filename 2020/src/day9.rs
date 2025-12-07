@@ -106,7 +106,7 @@ fn solution1_impl(nums: &[usize], win_size: usize) -> usize {
 fn solution1_impl_sorted(nums: &[usize], win_size: usize) -> usize {
     nums.windows(win_size + 1)
         .skip_while(|chunk| {
-            let mut past = (&chunk[..win_size]).clone().to_owned();
+            let mut past = (&chunk[..win_size]).to_owned();
             past.sort_unstable();
             let cur = chunk[win_size];
             for p in &past {

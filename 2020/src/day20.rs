@@ -565,7 +565,7 @@ fn stitch(tiles: &[Tile]) -> Tile {
                 0 => center.push(t),
                 1 => edge.push(t),
                 2 => corner.push(t),
-                c => panic!(format!("unexpected edge_count for {:?}: {}", t, c)),
+                c => panic!("unexpected edge_count for {:?}: {}", t, c),
             };
             (corner, edge, center)
         },

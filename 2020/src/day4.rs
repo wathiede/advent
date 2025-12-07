@@ -237,7 +237,7 @@ impl FromStr for Passport {
                     "ecl" => p.ecl = Some(v[1..].to_string()),
                     "pid" => p.pid = Some(v[1..].to_string()),
                     "cid" => p.cid = Some(v[1..].to_string()),
-                    s => panic!(format!("unknown key: '{}'", s)),
+                    s => panic!("unknown key: '{}'", s),
                 };
             });
         Ok(p)

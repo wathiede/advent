@@ -467,10 +467,10 @@ use std::ops::{Index, IndexMut};
 impl<T> IndexMut<(usize, usize, usize, usize)> for Universe<T> {
     fn index_mut(&mut self, (x, y, z, w): (usize, usize, usize, usize)) -> &mut Self::Output {
         if x >= self.x_len || y >= self.y_len || z > self.z_len || w > self.w_len {
-            panic!(format!(
+            panic!(
                 "index_mut outside of bounds ({},{},{},{})",
                 x, y, z, w
-            ));
+            );
         }
         &mut self.cells[x
             + y * self.y_len
@@ -539,7 +539,7 @@ impl std::str::FromStr for PocketDimension {
                 cells.extend(row.bytes().filter(|c| c != &b'\n').map(|c| match c {
                     b'#' => Cube::Active,
                     b'.' => Cube::Inactive,
-                    c => panic!(format!("Unknown state '{}'", c)),
+                    c => panic!("Unknown state '{}'", c),
                 }));
             });
         });

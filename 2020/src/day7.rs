@@ -78,7 +78,7 @@ impl Graph {
     fn add_node(&mut self, line: &str) {
         let parts: Vec<_> = line.split(" bags contain ").collect();
         match parts.len() {
-            0 | 1 => panic!(format!("line '{}' fails assumptions", line)),
+            0 | 1 => panic!("line '{}' fails assumptions", line),
             _ => {
                 let parent_color = parts[0].to_string();
                 let mut children = Vec::new();
@@ -100,7 +100,7 @@ impl Graph {
                     }
                 }
                 // Get or create this parent color
-                let mut p = self.nodes.entry(parent_color.clone()).or_insert(Node {
+                let p = self.nodes.entry(parent_color.clone()).or_insert(Node {
                     color: parent_color.clone(),
                     parents: Vec::new(),
                     children: Vec::new(),

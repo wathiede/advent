@@ -94,8 +94,8 @@ impl FromStr for Instruction {
             Some("nop") => Instruction::Nop(it.next().ok_or(())?.parse().map_err(|_| ())?),
             Some("acc") => Instruction::Acc(it.next().ok_or(())?.parse().map_err(|_| ())?),
             Some("jmp") => Instruction::Jmp(it.next().ok_or(())?.parse().map_err(|_| ())?),
-            Some(c) => panic!(format!("unknown instruction '{}'", c)),
-            None => panic!(format!("no space in '{}'", s)),
+            Some(c) => panic!("unknown instruction '{}'", c),
+            None => panic!("no space in '{}'", s),
         })
     }
 }

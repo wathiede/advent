@@ -82,7 +82,7 @@ fn lex(input: &str) -> Vec<Token> {
             b'*' => Token::Mul,
             b' ' => Token::Space,
             c @ b'0'..=b'9' => Token::Num((c - b'0') as u64),
-            c => panic!(format!("unexpected char '{:?}'", c)),
+            c => panic!("unexpected char '{:?}'", c),
         })
         // Ignore spaces
         .filter(|t| t != &Token::Space)
@@ -108,7 +108,7 @@ mod part1 {
                 tokens.pop_front();
                 return expr;
             }
-            t => panic!(format!("unexpected token {:?}", t)),
+            t => panic!("unexpected token {:?}", t),
         };
     }
 
@@ -168,7 +168,7 @@ mod part2 {
                 tokens.pop_front();
                 return expr;
             }
-            t => panic!(format!("unexpected token {:?}", t)),
+            t => panic!("unexpected token {:?}", t),
         };
     }
 

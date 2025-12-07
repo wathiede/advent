@@ -169,7 +169,7 @@ fn inv_mod(a: usize, m: usize) -> usize {
             }
         }
     }
-    panic!(format!("no inverse modulo found for {}^-1 % {}", a, m));
+    panic!("no inverse modulo found for {}^-1 % {}", a, m);
 }
 
 /// Based on http://homepages.math.uic.edu/~leon/mcs425-s08/handouts/chinese_remainder.pdf
