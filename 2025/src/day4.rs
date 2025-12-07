@@ -1,12 +1,12 @@
 use advent::prelude::*;
 use aoc_runner_derive::{aoc, aoc_generator};
 #[aoc_generator(day4)]
-fn parse(input: &str) -> Image {
+fn parse(input: &str) -> Image<u8> {
     input.parse().expect("couldn't parse image")
 }
 
 #[aoc(day4, part1)]
-fn part1(im: &Image) -> String {
+fn part1(im: &Image<u8>) -> String {
     let mut rolls = 0;
     for y in 0..im.height {
         for x in 0..im.width {
@@ -29,7 +29,7 @@ fn part1(im: &Image) -> String {
 }
 
 #[aoc(day4, part2)]
-fn part2(im: &Image) -> String {
+fn part2(im: &Image<u8>) -> String {
     let mut im = im.clone();
     let mut rolls = 0;
     let mut done = false;

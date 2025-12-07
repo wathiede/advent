@@ -45,7 +45,7 @@ fn part1(input: &str) -> String {
     collector.into_iter().sum::<i64>().to_string()
 }
 
-fn process_rect(im: &Image, r: Range<usize>, h: usize) -> u64 {
+fn process_rect(im: &Image<u8>, r: Range<usize>, h: usize) -> u64 {
     let mut nums = vec![];
     for x in r.start..r.end - 1 {
         let mut n = 0u64;
@@ -70,7 +70,7 @@ fn process_rect(im: &Image, r: Range<usize>, h: usize) -> u64 {
 
 #[aoc(day6, part2)]
 fn part2(input: &str) -> String {
-    let im: Image = input.parse().expect("parse image failed");
+    let im: Image<u8> = input.parse().expect("parse image failed");
     let h = im.height - 1;
     let mut ranges = vec![];
     let mut start = 0;
