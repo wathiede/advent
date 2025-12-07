@@ -172,8 +172,9 @@ fn part2(input: &str) -> Result<usize> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use pretty_assertions::assert_eq;
+
+    use super::*;
 
     #[test]
     fn test_part1() -> Result<()> {

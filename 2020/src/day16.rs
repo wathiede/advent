@@ -59,9 +59,7 @@
 //!
 //! Once you work out which field is which, look for the six fields on your ticket that start with the word departure. What do you get if you multiply those six values together?
 
-use std::collections::HashMap;
-use std::ops::Range;
-use std::str::FromStr;
+use std::{collections::HashMap, ops::Range, str::FromStr};
 
 use aoc_runner_derive::{aoc, aoc_generator};
 

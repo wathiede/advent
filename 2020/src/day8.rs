@@ -39,7 +39,6 @@
 //! Immediately before the program would run an instruction a second time, the value in the accumulator is 5.
 //!
 //! Run your copy of the boot code. Immediately before any instruction is executed a second time, what value is in the accumulator?
-//!
 
 //! --- Part Two ---
 //! After some careful analysis, you believe that exactly one instruction is corrupted.

@@ -191,8 +191,7 @@
 //!
 //! Given the new visibility method and the rule change for occupied seats becoming empty, once equilibrium is reached, how many seats end up occupied?
 
-use std::convert::TryFrom;
-use std::str::FromStr;
+use std::{convert::TryFrom, str::FromStr};
 
 use aoc_runner_derive::{aoc, aoc_generator};
 

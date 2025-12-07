@@ -1,6 +1,7 @@
+use std::ops::RangeInclusive;
+
 use advent::prelude::*;
 use aoc_runner_derive::aoc;
-use std::ops::RangeInclusive;
 
 struct Image(HashSet<(isize, isize)>);
 

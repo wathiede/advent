@@ -55,8 +55,7 @@
 //!
 //! How many individual bags are required inside your single shiny gold bag?
 
-use std::collections::HashMap;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use aoc_runner_derive::{aoc, aoc_generator};
 

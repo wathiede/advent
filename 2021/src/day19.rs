@@ -1,6 +1,7 @@
+use std::ops::{Add, Sub};
+
 use advent::prelude::*;
 use aoc_runner_derive::aoc;
-use std::ops::{Add, Sub};
 
 #[derive(Clone, Copy, Default, Eq, Hash, PartialEq, PartialOrd, Ord)]
 struct Vec3([i64; 3]);

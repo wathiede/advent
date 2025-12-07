@@ -255,10 +255,12 @@
 //!
 //! How many # are not part of a sea monster?
 
-use std::collections::{HashMap, HashSet};
-use std::fmt;
-use std::ops::{Index, IndexMut};
-use std::str::FromStr;
+use std::{
+    collections::{HashMap, HashSet},
+    fmt,
+    ops::{Index, IndexMut},
+    str::FromStr,
+};
 
 use aoc_runner_derive::{aoc, aoc_generator};
 

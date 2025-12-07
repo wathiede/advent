@@ -127,8 +127,7 @@
 //! aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba
 //! After updating rules 8 and 11, how many messages completely match rule 0?
 
-use std::collections::HashMap;
-use std::fmt;
+use std::{collections::HashMap, fmt};
 
 use aoc_runner_derive::{aoc, aoc_generator};
 use regex::Regex;

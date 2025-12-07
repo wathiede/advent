@@ -136,4 +136,3 @@ mod tests {
         assert_eq!(part2(&parse(&input_for(2025, 7))), "12895232295789");
     }
 }
-

@@ -82,8 +82,7 @@
 //!
 //! Execute the initialization program using an emulator for a version 2 decoder chip. What is the sum of all values left in memory after it completes?
 
-use std::collections::HashMap;
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 use aoc_runner_derive::aoc;
 

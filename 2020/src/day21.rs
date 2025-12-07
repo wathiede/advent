@@ -31,8 +31,10 @@
 //!
 //! Time to stock your raft with supplies. What is your canonical dangerous ingredient list?
 
-use std::collections::{HashMap, HashSet};
-use std::str::FromStr;
+use std::{
+    collections::{HashMap, HashSet},
+    str::FromStr,
+};
 
 use aoc_runner_derive::{aoc, aoc_generator};
 
