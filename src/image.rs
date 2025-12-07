@@ -1,14 +1,28 @@
 use crate::prelude::*;
 
 #[derive(Clone)]
-pub struct Image {
+pub struct Image<T>
+where
+    T: Copy,
+{
     pub width: usize,
     pub height: usize,
-    pixels: Vec<u8>,
+    pixels: Vec<T>,
 }
 
-impl Image {
-    pub fn get(&self, x: isize, y: isize) -> Option<u8> {
+impl<T> Image<T>
+where
+    T: Copy,
+{
+    pub fn new(width: usize, height: usize, init: T) -> Image<T> {
+        Image {
+            width,
+            height,
+            pixels: vec![init; width * height],
+        }
+    }
+
+    pub fn get(&self, x: isize, y: isize) -> Option<T> {
         if x < 0 || x as usize >= self.width {
             return None;
         }
@@ -18,14 +32,14 @@ impl Image {
         Some(self[(x as usize, y as usize)])
     }
     /// Visits up to 8 neighbors, ignoring cells out of bounds
-    pub fn visit_neighbors<MAP, REDUCE, T, U>(
+    pub fn visit_neighbors<MAP, REDUCE, U, V>(
         &self,
         (x, y): (isize, isize),
         compute: MAP,
         mut acc: REDUCE,
     ) where
-        MAP: Fn(u8) -> T,
-        REDUCE: FnMut(T) -> U,
+        MAP: Fn(T) -> U,
+        REDUCE: FnMut(U) -> V,
     {
         for j in -1..=1 {
             for i in -1..=1 {
@@ -38,7 +52,7 @@ impl Image {
     }
     pub fn kernel3x3_all<F>(&mut self, func: F)
     where
-        F: Fn(u8) -> u8,
+        F: Fn(T) -> T,
     {
         for y in 0..self.height {
             for x in 0..self.width {
@@ -48,7 +62,7 @@ impl Image {
     }
     pub fn kernel3x3<F>(&mut self, (x, y): (usize, usize), func: F)
     where
-        F: Fn(u8) -> u8,
+        F: Fn(T) -> T,
     {
         if x > 0 {
             self[(x - 1, y)] = func(self[(x - 1, y)]);
@@ -80,18 +94,24 @@ impl Image {
     }
 }
 
-impl PartialEq for Image {
+impl<T> PartialEq for Image<T>
+where
+    T: PartialEq + Copy,
+{
     fn eq(&self, other: &Self) -> bool {
         self.width == other.width && self.height == other.height && self.pixels == other.pixels
     }
 }
 
-impl Debug for Image {
+impl<T> Debug for Image<T>
+where
+    T: Display + Copy,
+{
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         writeln!(f)?;
         for y in 0..self.height {
             for x in 0..self.width {
-                write!(f, "{:2}", self[(x, y)] as char)?;
+                write!(f, "{:2}", self[(x, y)])?;
             }
             writeln!(f)?;
         }
@@ -99,7 +119,7 @@ impl Debug for Image {
     }
 }
 
-impl FromStr for Image {
+impl FromStr for Image<u8> {
     type Err = Infallible;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -120,14 +140,20 @@ impl FromStr for Image {
     }
 }
 
-impl Index<(usize, usize)> for Image {
-    type Output = u8;
+impl<T> Index<(usize, usize)> for Image<T>
+where
+    T: Copy,
+{
+    type Output = T;
     fn index(&self, (x, y): (usize, usize)) -> &Self::Output {
         &self.pixels[x + y * self.width]
     }
 }
 
-impl IndexMut<(usize, usize)> for Image {
+impl<T> IndexMut<(usize, usize)> for Image<T>
+where
+    T: Copy,
+{
     fn index_mut(&mut self, (x, y): (usize, usize)) -> &mut Self::Output {
         &mut self.pixels[x + y * self.width]
     }
