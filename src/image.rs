@@ -168,7 +168,7 @@ mod tests {
         let input = r#"111
 111
 111"#;
-        let im: Image = input.parse().expect("failed to parse image");
+        let im: Image<u8> = input.parse().expect("failed to parse image");
         let mut sum = 0;
         im.visit_neighbors((1, 1), |b| b - b'0', |b| sum += b);
         assert_eq!(sum, 8);
