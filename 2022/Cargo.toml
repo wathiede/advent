@@ -9,7 +9,7 @@ edition = "2021"
 anyhow = "1.0.66"
 aoc-runner = "0.3.0"
 aoc-runner-derive = "0.3.0"
-advent = { path = "../" }
+advent = { path = "../advent-common" }
 
 [profile.release]
 debug = true
