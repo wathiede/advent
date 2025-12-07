@@ -50,7 +50,6 @@ where
 
     let mut res = Vec::new();
     for seg in range_str.split([',', '\n']) {
-        println!("seg {seg}");
         let (lo, hi) = seg
             .split_once('-')
             .ok_or_else(|| ParserError::SplitError(seg.to_string(), '-'))?;
