@@ -1,15 +1,10 @@
 use std::ops::RangeInclusive;
 
+use advent::prelude::*;
 use aoc_runner_derive::{aoc, aoc_generator};
 #[aoc_generator(day2)]
 fn parse(input: &str) -> Vec<RangeInclusive<u64>> {
-    input
-        .split(',')
-        .map(|seg| {
-            let (lo, hi) = seg.split_once('-').expect("failed to split -");
-            lo.parse::<u64>().expect("lo failed")..=hi.parse::<u64>().expect("hi failed")
-        })
-        .collect()
+    range_inclusive(input).expect("failed to parse input").0
 }
 
 #[aoc(day2, part1)]
