@@ -133,6 +133,15 @@ impl Vec3 {
             + (rhs.0[2] - self.0[2]) * (rhs.0[2] - self.0[2]))
             .abs()
     }
+    pub fn x(&self) -> i64 {
+        self.0[0]
+    }
+    pub fn y(&self) -> i64 {
+        self.0[1]
+    }
+    pub fn z(&self) -> i64 {
+        self.0[2]
+    }
 }
 
 impl Add for Vec3 {
