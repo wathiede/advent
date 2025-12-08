@@ -28,7 +28,7 @@ impl FromStr for Grid {
                         .expect("s");
                     let e: (usize, usize) = se[1]
                         .split_once(',')
-                        .map(|(x, y)| ((x.parse().expect("e x"), y.parse().expect("e y"))))
+                        .map(|(x, y)| (x.parse().expect("e x"), y.parse().expect("e y")))
                         .expect("e");
                     let start = (s.0.min(e.0), s.1.min(e.1));
                     let end = (s.0.max(e.0) + 1, s.1.max(e.1) + 1);
@@ -155,7 +155,7 @@ impl FromStr for Grid2 {
                         .expect("s");
                     let e: (usize, usize) = se[1]
                         .split_once(',')
-                        .map(|(x, y)| ((x.parse().expect("e x"), y.parse().expect("e y"))))
+                        .map(|(x, y)| (x.parse().expect("e x"), y.parse().expect("e y")))
                         .expect("e");
                     let start = (s.0.min(e.0), s.1.min(e.1));
                     let end = (s.0.max(e.0) + 1, s.1.max(e.1) + 1);

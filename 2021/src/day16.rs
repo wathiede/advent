@@ -91,7 +91,7 @@ struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    fn new(input: &str) -> Parser {
+    fn new(input: &str) -> Parser<'_> {
         Parser {
             bytes: input.as_bytes(),
             tmp: 0,
