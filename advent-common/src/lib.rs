@@ -14,10 +14,14 @@ pub mod prelude {
     pub use anyhow::Result;
     pub use thiserror::Error;
 
-    pub use crate::{image::Image, input_for, parsers::range_inclusive, vprint, BitSet};
+    pub use crate::{image::Image, input_for, parsers::range_inclusive, vprint, BitSet, Vec3};
 }
 
-use std::fmt;
+use std::{
+    fmt,
+    ops::{Add, Sub},
+    str::FromStr,
+};
 
 mod image;
 pub mod parsers;
@@ -116,5 +120,55 @@ impl fmt::Display for BitSet {
             }
         }
         Ok(())
+    }
+}
+
+#[derive(Clone, Copy, Default, Eq, Hash, PartialEq, PartialOrd, Ord)]
+pub struct Vec3([i64; 3]);
+
+impl Vec3 {
+    pub fn distance_squared(&self, rhs: &Vec3) -> i64 {
+        ((rhs.0[0] - self.0[0]) * (rhs.0[0] - self.0[0])
+            + (rhs.0[1] - self.0[1]) * (rhs.0[1] - self.0[1])
+            + (rhs.0[2] - self.0[2]) * (rhs.0[2] - self.0[2]))
+            .abs()
+    }
+}
+
+impl Add for Vec3 {
+    type Output = Self;
+    fn add(self, other: Self) -> Self::Output {
+        Vec3([
+            self.0[0] + other.0[0],
+            self.0[1] + other.0[1],
+            self.0[2] + other.0[2],
+        ])
+    }
+}
+
+impl Sub for Vec3 {
+    type Output = Self;
+    fn sub(self, other: Self) -> Self::Output {
+        Vec3([
+            self.0[0] - other.0[0],
+            self.0[1] - other.0[1],
+            self.0[2] - other.0[2],
+        ])
+    }
+}
+
+impl fmt::Debug for Vec3 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "<{:4},{:4},{:4}>", self.0[0], self.0[1], self.0[2])
+    }
+}
+
+impl FromStr for Vec3 {
+    // TODO: make this a real type
+    type Err = std::convert::Infallible;
+
+    fn from_str(input: &str) -> std::result::Result<Vec3, std::convert::Infallible> {
+        let v: Vec<_> = input.split(',').map(|s| s.parse().unwrap()).collect();
+        Ok(Vec3(v.try_into().unwrap()))
     }
 }
