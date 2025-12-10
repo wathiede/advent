@@ -103,7 +103,9 @@ where
     }
 }
 
-impl<T> Debug for Image<T>
+/// Draws the image as a grid. Default print has a space between columns, alternate ('#') format
+/// prints a grid densly.
+impl<T> Display for Image<T>
 where
     T: Display + Copy,
 {
@@ -111,7 +113,11 @@ where
         writeln!(f)?;
         for y in 0..self.height {
             for x in 0..self.width {
-                write!(f, "{:2}", self[(x, y)])?;
+                if f.alternate() {
+                    write!(f, "{}", self[(x, y)])?;
+                } else {
+                    write!(f, "{:2}", self[(x, y)])?;
+                }
             }
             writeln!(f)?;
         }
