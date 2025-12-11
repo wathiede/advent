@@ -29,15 +29,42 @@ fn part1(input: &Graph) -> String {
     bfs(input, "you").to_string()
 }
 
+fn bfs2<'a>(
+    g: &'a Graph,
+    node: &'a str,
+    stop: &str,
+    mut memo: &mut HashMap<&'a str, usize>,
+) -> usize {
+    if node == stop {
+        return 1;
+    }
+    if !g.g.contains_key(node) {
+        return 0;
+    }
+    if let Some(c) = memo.get(node) {
+        return *c;
+    }
+    let res = g.g[node].iter().map(|n| bfs2(g, n, stop, &mut memo)).sum();
+    memo.insert(node, res);
+    res
+}
+
 #[aoc(day11, part2)]
 fn part2(input: &Graph) -> String {
-    todo!()
+    // My data has fft before dac, so this solution works
+    let mut memo = HashMap::new();
+    let v1 = bfs2(input, "svr", "fft", &mut memo);
+    let mut memo = HashMap::new();
+    let v2 = bfs2(input, "fft", "dac", &mut memo);
+    let mut memo = HashMap::new();
+    let v3 = bfs2(input, "dac", "out", &mut memo);
+    (v1 * v2 * v3).to_string()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    const INPUT: &'static str = r#"aaa: you hhh
+    const INPUT1: &'static str = r#"aaa: you hhh
 you: bbb ccc
 bbb: ddd eee
 ccc: ddd eee fff
@@ -50,14 +77,27 @@ iii: out"#;
 
     #[test]
     fn part1_example() {
-        assert_eq!(part1(&parse(INPUT)), "5");
+        assert_eq!(part1(&parse(INPUT1)), "5");
+        assert_eq!(part1(&parse(&input_for(2025, 11))), "470");
     }
 
-    /*
+    const INPUT2: &'static str = r#"svr: aaa bbb
+aaa: fft
+fft: ccc
+bbb: tty
+tty: ccc
+ccc: ddd eee
+ddd: hub
+hub: fff
+eee: dac
+dac: fff
+fff: ggg hhh
+ggg: out
+hhh: out"#;
     #[test]
     fn part2_example() {
-        assert_eq!(part2(&parse("<EXAMPLE>")), "<RESULT>");
+        assert_eq!(part2(&parse(INPUT2)), "2");
+        assert_eq!(part2(&parse(&input_for(2025, 11))), "384151614084875");
     }
-    */
 }
 
