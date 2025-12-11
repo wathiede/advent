@@ -1,3 +1,4 @@
+mod day11;
 // Disabled until part 2 works and part 1 is fixed
 // mod day10;
 mod day1;
