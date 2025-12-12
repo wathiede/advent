@@ -1,9 +1,13 @@
+use std::hash::Hash;
+
+use itertools::iproduct;
+
 use crate::prelude::*;
 
-#[derive(Clone)]
+#[derive(Clone, Hash, Eq, Ord, PartialOrd)]
 pub struct Image<T>
 where
-    T: Copy,
+    T: Copy + Hash + Ord + PartialOrd,
 {
     pub width: usize,
     pub height: usize,
@@ -12,13 +16,37 @@ where
 
 impl<T> Image<T>
 where
-    T: Copy,
+    T: Copy + Default + Eq + Hash + Ord + PartialOrd,
 {
     pub fn new(width: usize, height: usize, init: T) -> Image<T> {
         Image {
             width,
             height,
             pixels: vec![init; width * height],
+        }
+    }
+    /// Sets all pixels to the default value for T
+    pub fn clear(&mut self) {
+        self.pixels.fill(T::default());
+    }
+
+    /// Compares all pixels in im @ offset x,y in self, if no pixels in self are currently is_set,
+    /// the image can be blit
+    pub fn can_blit(&self, (x_off, y_off): (usize, usize), im: &Image<T>, is_set: T) -> bool {
+        for (x, y) in iproduct!(0..im.width, 0..im.height) {
+            if im[(x, y)] == is_set && self[(x + x_off, y + y_off)] == is_set {
+                return false;
+            }
+        }
+        true
+    }
+
+    /// Copies im into self @ offset x,y where im is is_set
+    pub fn blit(&mut self, (x_off, y_off): (usize, usize), im: &Image<T>, is_set: T) {
+        for (x, y) in iproduct!(0..im.width, 0..im.height) {
+            if im[(x, y)] == is_set {
+                self[(x + x_off, y + y_off)] = im[(x, y)];
+            }
         }
     }
 
@@ -30,6 +58,16 @@ where
             return None;
         }
         Some(self[(x as usize, y as usize)])
+    }
+    /// Rotates 90 degrees clockwise and returns new Image
+    pub fn rot90(&self) -> Self {
+        let mut im = Image::new(self.height, self.width, T::default());
+        for x in 0..self.width {
+            for y in 0..self.height {
+                im[(y, x)] = self[(self.width - x - 1, y)];
+            }
+        }
+        im
     }
     /// Visits up to 8 neighbors, ignoring cells out of bounds
     pub fn visit_neighbors<MAP, REDUCE, U, V>(
@@ -96,7 +134,7 @@ where
 
 impl<T> PartialEq for Image<T>
 where
-    T: PartialEq + Copy,
+    T: PartialEq + Copy + Hash + Ord + PartialOrd,
 {
     fn eq(&self, other: &Self) -> bool {
         self.width == other.width && self.height == other.height && self.pixels == other.pixels
@@ -107,7 +145,7 @@ where
 /// prints a grid densly.
 impl<T> Display for Image<T>
 where
-    T: Display + Copy,
+    T: Display + Copy + Hash + Ord + PartialOrd,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
         writeln!(f)?;
@@ -121,6 +159,16 @@ where
             }
             writeln!(f)?;
         }
+        Ok(())
+    }
+}
+
+impl<T> Debug for Image<T>
+where
+    T: Display + Copy + Hash + Ord + PartialOrd,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        writeln!(f, "{self}")?;
         Ok(())
     }
 }
@@ -146,9 +194,26 @@ impl FromStr for Image<u8> {
     }
 }
 
+impl FromStr for Image<char> {
+    type Err = Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let rows: Vec<_> = s.lines().collect();
+        let width = rows[0].len();
+        let height = rows.len();
+        let pixels = rows.iter().flat_map(|row| row.chars()).collect();
+
+        Ok(Image {
+            width,
+            height,
+            pixels,
+        })
+    }
+}
+
 impl<T> Index<(usize, usize)> for Image<T>
 where
-    T: Copy,
+    T: Copy + Hash + Ord + PartialOrd,
 {
     type Output = T;
     fn index(&self, (x, y): (usize, usize)) -> &Self::Output {
@@ -158,7 +223,7 @@ where
 
 impl<T> IndexMut<(usize, usize)> for Image<T>
 where
-    T: Copy,
+    T: Copy + Hash + Ord + PartialOrd,
 {
     fn index_mut(&mut self, (x, y): (usize, usize)) -> &mut Self::Output {
         &mut self.pixels[x + y * self.width]
